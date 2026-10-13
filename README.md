@@ -82,7 +82,6 @@ Browser → nginx proxy → Nuxt site / Vue admin
 
 [shift-demo.webm](https://github.com/user-attachments/assets/c6b059ce-df13-45a3-aeaa-efaa10af8a59)
 
-
 Перезаписать видео можно командой `node docs/scripts/demo-video.mjs` на запущенном стенде (файл появится в `docs/public/demo/`).
 
 ## Документация
