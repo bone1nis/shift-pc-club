@@ -12,6 +12,10 @@ SHIFT — демонстрационная система одного комп�
 - [Разработчикам: запуск монорепозитория](/developer/)
 - [Архитектура и безопасность](/developer/architecture)
 - [HTTP API и события](/developer/api)
+- [Доменные события и очереди](/developer/events)
+- [Фронтенд](/developer/frontend)
+- [Тестирование](/developer/testing)
+- [Архитектурные решения (ADR)](/adr/)
 - [Мониторинг](/developer/monitoring)
 
 ## API
