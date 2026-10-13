@@ -27,10 +27,22 @@ class AdminBookingTest extends TestCase
         return $request;
     }
 
+    /**
+     * @param  array<string, mixed>  $identityResponse
+     */
+    private function fakeServices(array $identityResponse, int $identityStatus = 200): void
+    {
+        $snapshot = ['zones' => [], 'workstations' => [['id' => 1, 'zone_id' => 1, 'name' => 'PC-1', 'status' => 'available', 'version' => 1]], 'tariffs' => [['id' => 1, 'zone_id' => 1, 'hourly_price' => 18000, 'version' => 1]]];
+        Http::fake([
+            config('shift.club_url').'/*' => Http::response(['data' => $snapshot]),
+            config('shift.identity_url').'/api/auth/internal/users/42' => Http::response($identityResponse, $identityStatus),
+        ]);
+    }
+
     public function test_booking_belongs_to_selected_player_and_repeat_does_not_duplicate_audit(): void
     {
         $request = $this->bookingRequest();
-        Http::fake([config('shift.identity_url').'/api/auth/internal/users/42' => Http::response(['data' => ['id' => 42, 'role' => 'player']])]);
+        $this->fakeServices(['data' => ['id' => 42, 'role' => 'player']]);
         $controller = app(BookingController::class);
         $response = $controller->createAdmin($request);
         self::assertSame(201, $response->status());
@@ -42,7 +54,7 @@ class AdminBookingTest extends TestCase
     public function test_unavailable_player_is_rejected_without_creating_booking(): void
     {
         $request = $this->bookingRequest();
-        Http::fake([config('shift.identity_url').'/api/auth/internal/users/42' => Http::response([], 404)]);
+        $this->fakeServices([], 404);
         try {
             app(BookingController::class)->createAdmin($request);
             self::fail('Unavailable player must be rejected.');
