@@ -20,7 +20,7 @@ const settle = (page) => page.waitForTimeout(1500)
 
 const visitor = await (
   await browser.newContext({
-    viewport: { width: 1280, height: 800 },
+    viewport: { width: 1920, height: 1080 },
     baseURL: base,
     timezoneId: 'Europe/Moscow',
   })
@@ -49,7 +49,7 @@ await visitor.screenshot({ path: `${out}/account.png` })
 
 const admin = await (
   await browser.newContext({
-    viewport: { width: 1280, height: 900 },
+    viewport: { width: 1920, height: 1080 },
     baseURL: base,
     timezoneId: 'Europe/Moscow',
   })

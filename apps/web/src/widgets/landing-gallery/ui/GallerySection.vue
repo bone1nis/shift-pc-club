@@ -65,30 +65,20 @@ function scrollBy(direction: 1 | -1) {
   overflow: hidden;
 }
 .gallery__controls {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin: -24px 0 19px;
+  display: none;
 }
+/* Десктоп: все карточки в сетке внутри контейнера; прокрутка с кнопками — только на узких экранах. */
 .gallery__track {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
-  margin: 0;
-  padding: 5px max(32px, calc((100vw - 1408px) / 2)) 16px;
+  max-width: 1472px;
+  margin: 0 auto;
+  padding: 5px 32px 16px;
   list-style: none;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scroll-padding-inline: max(32px, calc((100vw - 1408px) / 2));
-  scrollbar-width: thin;
-  scrollbar-color: var(--line-strong) transparent;
-}
-.gallery__track {
-  align-items: stretch;
 }
 .gallery__slide {
   display: flex;
-  flex: 0 0 min(544px, 82vw);
-  scroll-snap-align: start;
 }
 /* Все карточки одной высоты и ширины, независимо от длины подписи. */
 .gallery figure {
@@ -128,16 +118,35 @@ function scrollBy(direction: 1 | -1) {
   font-size: var(--fs-13);
   color: var(--muted);
 }
+@media (max-width: 1100px) {
+  .gallery__track {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
 @media (max-width: 760px) {
   .gallery {
     padding-top: 48px;
   }
   .gallery__controls {
-    display: none;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin: -24px 0 19px;
   }
   .gallery__track {
+    display: flex;
+    max-width: none;
+    margin: 0;
     padding-inline: 16px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
     scroll-padding-inline: 16px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--line-strong) transparent;
+  }
+  .gallery__slide {
+    flex: 0 0 min(544px, 82vw);
+    scroll-snap-align: start;
   }
 }
 </style>

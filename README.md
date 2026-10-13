@@ -72,7 +72,9 @@ Browser → nginx proxy → Nuxt site / Vue admin
 | **Отчёты**                                       | **Оборудование**                                         |
 | ![Отчёты](docs/public/screens/admin-reports.png) | ![Оборудование](docs/public/screens/admin-equipment.png) |
 
-Также есть `admin-club.png` и `admin-notifications.png` в `docs/public/screens/`. Скриншоты сняты с локального стенда на демо-данных.
+## Монорепозиторий
+
+Сайт (`apps/web`) и админка (`apps/admin`) — два отдельных приложения, но общий код (`packages/ui`, `packages/contracts`) они берут из одного места через pnpm workspace: `"@shift/ui": "workspace:*"` превращается в символическую ссылку на папку пакета, отдельной сборки и публикации не нужно. Подробно — в [руководстве по фронтенду](docs/developer/frontend.md#как-устроена-связка-пакетов-pnpm-workspace).
 
 ## Видеодемо
 
