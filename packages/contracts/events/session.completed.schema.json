@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://shift.local/events/session.completed.schema.json",
+  "title": "session.completed",
+  "description": "Игровая сессия завершена. user_id null для гостя. Издатель: Booking.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["session_id", "user_id"],
+  "properties": {
+    "session_id": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "user_id": {
+      "type": ["integer", "null"]
+    }
+  }
+}

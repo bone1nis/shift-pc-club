@@ -1,0 +1,32 @@
+apiVersion: 1
+datasources:
+  - name: Prometheus
+    uid: prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+  - name: Loki
+    uid: loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+  - name: SHIFT Reporting (read-only)
+    uid: reporting
+    type: grafana-postgresql-datasource
+    access: proxy
+    url: postgres:5432
+    user: shift_report
+    database: shift_booking
+    isDefault: false
+    jsonData:
+      # Новые версии Grafana берут имя базы только отсюда; верхнеуровневого `database` недостаточно.
+      database: shift_booking
+      sslmode: disable
+      postgresVersion: 1600
+      timescaledb: false
+      maxOpenConns: 5
+      maxIdleConns: 2
+      maxLifetime: 14400
+    secureJsonData:
+      password: $REPORTING_DB_PASSWORD

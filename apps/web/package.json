@@ -1,0 +1,31 @@
+{
+  "name": "@shift/web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev --host 0.0.0.0 --port 3000",
+    "build": "nuxt build",
+    "start": "node .output/server/index.mjs",
+    "typecheck": "nuxt typecheck",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@date-fns/tz": "^1.5.0",
+    "@pinia/nuxt": "^0.11.2",
+    "@shift/contracts": "workspace:*",
+    "@shift/ui": "workspace:*",
+    "@tanstack/vue-query": "^5.104.2",
+    "@vite-pwa/nuxt": "^1.1.1",
+    "@vueuse/core": "^15.0.0",
+    "date-fns": "^4.4.0",
+    "motion-v": "^1.8.1",
+    "nuxt": "^4.2.1",
+    "pinia": "^3.0.3",
+    "vue": "^3.5.22",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vue-tsc": "^3.1.1"
+  }
+}

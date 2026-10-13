@@ -1,0 +1,30 @@
+{
+  "name": "@shift/admin",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --port 5173",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview --host 0.0.0.0 --port 5173",
+    "typecheck": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "@date-fns/tz": "^1.5.0",
+    "@formkit/auto-animate": "^0.10.0",
+    "@shift/contracts": "workspace:*",
+    "@shift/ui": "workspace:*",
+    "@vueuse/core": "^15.0.0",
+    "date-fns": "^4.4.0",
+    "pinia": "^3.0.3",
+    "vue": "^3.5.22",
+    "vue-router": "^4.6.3"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.1",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.10",
+    "vite-plugin-pwa": "^2.0.0",
+    "vue-tsc": "^3.1.1",
+    "workbox-window": "^7.4.1"
+  }
+}

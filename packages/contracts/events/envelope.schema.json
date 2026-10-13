@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://shift.local/events/envelope.schema.json",
+  "title": "Конверт доменного события",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["event_id", "type", "schema_version", "occurred_at", "correlation_id", "payload"],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "description": "UUID; ключ дедупликации в inbox потребителя."
+    },
+    "type": {
+      "type": "string",
+      "pattern": "^[a-z_]+(\\.[a-z_]+)+$"
+    },
+    "schema_version": {
+      "const": 1,
+      "description": "Версия схемы конверта и payload; несовместимые изменения повышают версию."
+    },
+    "occurred_at": {
+      "type": "string",
+      "description": "ISO 8601."
+    },
+    "correlation_id": {
+      "type": "string",
+      "description": "request_id или UUID исходного запроса."
+    },
+    "payload": {
+      "type": "object"
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://shift.local/events/club.catalog.updated.schema.json",
+  "title": "club.catalog.updated",
+  "description": "Изменён каталог клуба; потребитель перечитывает snapshot Club. Издатель: Club.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["entity", "id", "version"],
+  "properties": {
+    "entity": {
+      "enum": ["zones", "workstations", "tariffs"]
+    },
+    "id": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    }
+  }
+}

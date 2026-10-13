@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://shift.local/events/booking.no_show.schema.json",
+  "title": "booking.no_show",
+  "description": "Неявка: бронь освобождена. Издатель: Booking.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["booking_id", "user_id"],
+  "properties": {
+    "booking_id": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "user_id": {
+      "type": "integer",
+      "minimum": 1
+    }
+  }
+}

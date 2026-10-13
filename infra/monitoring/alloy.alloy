@@ -1,0 +1,36 @@
+local.file_match "application" {
+  path_targets = [
+    {"__path__" = "/logs/identity/*.log", "service" = "identity"},
+    {"__path__" = "/logs/club/*.log", "service" = "club"},
+    {"__path__" = "/logs/booking/*.log", "service" = "booking"},
+    {"__path__" = "/logs/proxy/*.log", "service" = "proxy"},
+  ]
+}
+loki.source.file "application" {
+  targets = local.file_match.application.targets
+  forward_to = [loki.process.application.receiver]
+}
+loki.process "application" {
+  stage.json {
+    expressions = {
+      level = "level_name",
+      method = "method",
+      status = "status",
+      request_id = "request_id",
+    }
+  }
+  stage.labels {
+    values = {
+      level = "level",
+      method = "method",
+      status = "status",
+    }
+  }
+  stage.structured_metadata {
+    values = { request_id = "request_id" }
+  }
+  forward_to = [loki.write.local.receiver]
+}
+loki.write "local" {
+  endpoint { url = "http://loki:3100/loki/api/v1/push" }
+}

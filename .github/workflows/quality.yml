@@ -1,0 +1,42 @@
+name: Quality
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 10.12.4 }
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: ./scripts/check.sh frontend
+      - run: pnpm audit --prod
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - run: node scripts/bootstrap.mjs
+      - run: docker compose build identity
+      - run: |
+          for service in identity club booking; do
+            docker compose run --rm --no-deps "$service" composer install --no-interaction --prefer-dist
+            docker compose run --rm --no-deps "$service" php artisan key:generate
+          done
+      - run: docker compose up -d postgres redis rabbitmq mailpit identity club booking proxy
+      - run: python3 scripts/isolate-test-databases.py
+      - name: Актуальность типов API из OpenAPI
+        run: node packages/contracts/scripts/generate.mjs --check
+      - run: ./scripts/check.sh backend
+      - run: |
+          for service in identity club booking; do
+            docker compose exec -T "$service" composer audit --no-interaction
+          done
+      - if: failure()
+        run: docker compose ps
+      - if: always()
+        run: docker compose down

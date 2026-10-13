@@ -1,0 +1,172 @@
+apiVersion: 1
+groups:
+  - orgId: 1
+    name: shift-api-health
+    folder: SHIFT
+    interval: 1m
+    # Условия вида «метрика > порога» при здоровой системе возвращают пустой результат. Пустой результат (NoData)
+    # считается нормой (OK), иначе правило горит постоянно; исчезновение метрики ловит absent() в самом условии.
+    rules:
+      - uid: shift-api-down
+        title: SHIFT API scrape target down
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              datasource:
+                type: prometheus
+                uid: prometheus
+              editorMode: code
+              expr: up{job=~"identity|club|booking"} == 0
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+              range: false
+        for: 2m
+        noDataState: OK
+        execErrState: Alerting
+        annotations:
+          summary: An API service is not responding to Prometheus scrapes.
+          description: Check service health and the internal metrics route.
+        labels:
+          severity: critical
+      - uid: shift-api-5xx
+        title: SHIFT API 5xx ratio elevated
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              datasource:
+                type: prometheus
+                uid: prometheus
+              editorMode: code
+              expr: sum by (service) (rate(shift_http_requests_total{status=~"5.."}[5m])) / clamp_min(sum by (service) (rate(shift_http_requests_total[5m])), 1) > 0.05
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+              range: false
+        for: 5m
+        noDataState: OK
+        execErrState: Alerting
+        annotations:
+          summary: More than five percent of API requests are failing.
+        labels:
+          severity: warning
+      - uid: shift-api-p95
+        title: SHIFT API p95 latency above one second
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              datasource:
+                type: prometheus
+                uid: prometheus
+              editorMode: code
+              expr: histogram_quantile(0.95, sum by (le, service) (rate(shift_http_request_duration_seconds_bucket[5m]))) > 1
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+              range: false
+        for: 5m
+        noDataState: OK
+        execErrState: Alerting
+        annotations:
+          summary: API p95 response time exceeded one second.
+        labels:
+          severity: warning
+      - uid: shift-outbox-age
+        title: SHIFT outbox delivery delayed
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              datasource:
+                type: prometheus
+                uid: prometheus
+              editorMode: code
+              expr: shift_outbox_oldest_age_seconds > 120 and shift_outbox_pending > 0
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+              range: false
+        for: 3m
+        noDataState: OK
+        execErrState: Alerting
+        annotations:
+          summary: An unpublished outbox event is older than two minutes.
+        labels:
+          severity: warning
+      - uid: shift-worker-heartbeat
+        title: SHIFT booking worker heartbeat stale
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              datasource:
+                type: prometheus
+                uid: prometheus
+              editorMode: code
+              expr: time() - shift_worker_heartbeat_timestamp_seconds{service="booking"} > 120 or absent(shift_worker_heartbeat_timestamp_seconds{service="booking"})
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+              range: false
+        for: 2m
+        noDataState: OK
+        execErrState: Alerting
+        annotations:
+          summary: The Booking event worker has not reported a recent heartbeat.
+        labels:
+          severity: critical
+      - uid: shift-scheduler-heartbeat
+        title: SHIFT scheduler heartbeat stale
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              datasource:
+                type: prometheus
+                uid: prometheus
+              editorMode: code
+              expr: time() - shift_scheduler_heartbeat_timestamp_seconds > 120 or absent(shift_scheduler_heartbeat_timestamp_seconds)
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+              range: false
+        for: 2m
+        noDataState: OK
+        execErrState: Alerting
+        annotations:
+          summary: One or more schedulers have not reported a recent heartbeat.
+        labels:
+          severity: critical

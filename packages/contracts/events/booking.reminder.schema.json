@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://shift.local/events/booking.reminder.schema.json",
+  "title": "booking.reminder",
+  "description": "Зарезервировано: сейчас напоминание создаётся напрямую в Booking, потребитель событие понимает.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["booking_id", "user_id"],
+  "properties": {
+    "booking_id": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "user_id": {
+      "type": "integer",
+      "minimum": 1
+    }
+  }
+}

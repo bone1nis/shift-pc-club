@@ -1,0 +1,31 @@
+{
+  "name": "@shift/ui",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./tokens.css": "./src/tokens.css"
+  },
+  "scripts": {
+    "typecheck": "vue-tsc --noEmit -p tsconfig.json",
+    "dev": "storybook dev -p 6006 --no-open --ci",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build",
+    "icons": "node scripts/generate-icons.mjs"
+  },
+  "dependencies": {
+    "@date-fns/utc": "^2.1.1",
+    "date-fns": "^4.4.0",
+    "vue": "^3.5.22"
+  },
+  "devDependencies": {
+    "@iconify-json/lucide": "^1.2.143",
+    "@storybook/addon-a11y": "^9.1.16",
+    "@storybook/vue3-vite": "^9.1.16",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "storybook": "^9.1.16",
+    "vite": "^7.1.10",
+    "vue-tsc": "^3.1.1"
+  }
+}

@@ -1,0 +1,277 @@
+/* Глобально остаются только дизайн-токены, шрифты, сброс и типографика.
+   Стили компонентов лежат рядом с компонентами (<style scoped>). */
+@font-face {
+  font-family: ShiftDisplay;
+  src: url('/fonts/BarlowCondensed-ExtraBold.woff2') format('woff2');
+  font-display: block;
+  font-weight: 800;
+}
+@font-face {
+  font-family: ShiftSans;
+  src: url('/fonts/Manrope-Variable.woff2') format('woff2');
+  font-display: block;
+  font-weight: 200 800;
+}
+:root {
+  color-scheme: dark;
+
+  --bg: #111212;
+  --surface: #1b1c1c;
+  --raised: #242626;
+  --sunken: #161818;
+  --line: #343636;
+  --line-strong: #484b43;
+  --text: #f7f7ee;
+  --muted: #a6aaa2;
+  --acid: #dbff00;
+  --acid-ink: #12140a;
+  --danger: #ff9999;
+  --danger-bg: #332021;
+  --danger-line: #704043;
+  --warning: #ffd786;
+  --warning-bg: #352d1d;
+  --success-bg: #273018;
+  --notice-bg: #242b1d;
+  --notice-line: #485139;
+  --notice-text: #d5e0bd;
+
+  --radius: 10px;
+  --radius-sm: 4px;
+  --shadow-pop: 0 19px 48px rgb(0 0 0 / 55%);
+  /* Выпадающие списки и календари открываются и поверх диалогов, поэтому слой выше. */
+  --z-dialog: 80;
+  --z-popover: 90;
+
+  /* Оттенки интерфейса (имя — семейство и светлота, %). */
+  --amber-15: #3a2a12;
+  --amber-16: #302c23;
+  --amber-33: #705c36;
+  --amber-85: #ffe9b5;
+  --black: #000000;
+  --blue-14: #1c2129;
+  --gray-10: #1a1c19;
+  --gray-12: #1d201b;
+  --gray-15: #2b2323;
+  --gray-19: #30332d;
+  --gray-28: #494d43;
+  --gray-31: #50534b;
+  --gray-41: #6a6e62;
+  --gray-42: #6c7068;
+  --gray-66: #aab19e;
+  --gray-7: #111111;
+  --gray-75: #c0c5ba;
+  --gray-8: #141615;
+  --gray-9: #151717;
+  --olive-10: #191e15;
+  --olive-10-a: #1b2015;
+  --olive-10-b: #181c16;
+  --olive-12: #252b14;
+  --olive-13: #24281b;
+  --olive-14: #242d19;
+  --olive-15: #303b12;
+  --olive-15-a: #2c3319;
+  --olive-16: #2d351d;
+  --olive-17: #333d1b;
+  --olive-18: #303a22;
+  --olive-20: #34392c;
+  --olive-22: #39462c;
+  --olive-22-a: #3a4230;
+  --olive-24: #3e4536;
+  --olive-25: #434d32;
+  --olive-30: #526533;
+  --olive-30-a: #4f5e3d;
+  --olive-31: #596b32;
+  --olive-37: #667748;
+  --olive-43: #9ba832;
+  --olive-5: #0d100b;
+  --olive-6: #172000;
+  --olive-66: #abb79b;
+  --olive-7: #141a09;
+  --olive-7-a: #151a0b;
+  --olive-70: #b6bea7;
+  --olive-8: #141910;
+  --olive-80: #ced3c3;
+  --olive-82: #dae7bc;
+  --olive-87: #e4e5d8;
+  --olive-88: #e4e6dc;
+  --red-17: #352323;
+  --red-22: #472b2b;
+  --red-34: #6c4141;
+  --red-34-a: #684444;
+  --red-85: #ffb3b3;
+  --red-88: #ffc1c1;
+  --red-89: #ffc7c7;
+
+  /* Полупрозрачные цвета для теней, подложек и подсветок. */
+  --black-a40: rgb(0 0 0 / 40%);
+  --black-a60: rgb(0 0 0 / 60%);
+  --gray-3-a72: rgb(8 9 8 / 72%);
+  --green-4-a16: rgb(9 12 10 / 16%);
+  --green-4-a86: rgb(9 12 10 / 86%);
+  --green-4-a98: rgb(9 12 10 / 98%);
+  --warning-a25: rgb(255 215 134 / 25%);
+  --white-a8: rgb(255 255 255 / 8%);
+
+  /* Размеры шрифта (px). */
+  --fs-9: 9px;
+  --fs-10: 10px;
+  --fs-11: 11px;
+  --fs-12: 12px;
+  --fs-13: 13px;
+  --fs-14: 14px;
+  --fs-15: 15px;
+  --fs-16: 16px;
+  --fs-18: 18px;
+  --fs-20: 20px;
+  --fs-22: 22px;
+  --fs-24: 24px;
+  --fs-28: 28px;
+  --fs-32: 32px;
+  --fs-36: 36px;
+  --fs-40: 40px;
+  --fs-48: 48px;
+  --fs-56: 56px;
+  --fs-64: 64px;
+  --fs-72: 72px;
+  --fs-80: 80px;
+  --fs-96: 96px;
+  /* Адаптивные размеры заголовков: от минимума до максимума в зависимости от ширины окна. */
+  --fs-fluid-36-80: clamp(36px, 11vw, 80px);
+  --fs-fluid-32-48: clamp(32px, 9vw, 48px);
+  --fs-fluid-38-64: clamp(38px, 4vw, 64px);
+  --fs-fluid-48-80: clamp(48px, 8vw, 80px);
+  --fs-fluid-48-96: clamp(48px, 6vw, 96px);
+  --fs-fluid-59-136: clamp(59px, 8vw, 136px);
+  --fs-fluid-77-133: clamp(77px, 7.7vw, 133px);
+  --fs-fluid-80-160: clamp(80px, 10vw, 160px);
+
+  --green-5: #0a0e0b;
+  --olive-11: #1d2316;
+  --olive-13-a: #232a19;
+  --olive-14-a: #242a1c;
+  --olive-15-b: #28321a;
+  --olive-17-a: #2b3322;
+  --olive-18-a: #2f3a24;
+  --olive-23: #3a4530;
+  --olive-50: #819866;
+  --olive-7-b: #14170f;
+  --bg-a48: rgb(17 18 18 / 48%);
+  --bg-a85: rgb(17 18 18 / 85%);
+  --green-5-a44: rgb(10 14 11 / 44%);
+  --green-5-a95: rgb(10 14 11 / 95%);
+  --olive-15-b-a11: rgb(40 50 26 / 11%);
+  --olive-15-b-a20: rgb(40 50 26 / 20%);
+  --olive-50-a5: rgb(129 152 102 / 5%);
+  --fs-288: 288px;
+  --fs-384: 384px;
+
+  --font-display: ShiftDisplay, 'Arial Narrow', Impact, sans-serif;
+  --font-sans: ShiftSans, Arial, sans-serif;
+
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--text);
+  font-synthesis: none;
+}
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html {
+  /* Резерв под полосу прокрутки: страница не «дёргается», когда диалог скрывает прокрутку. */
+  scrollbar-gutter: stable;
+  scroll-behavior: smooth;
+  scroll-padding-top: 96px;
+}
+body {
+  margin: 0;
+  min-width: 320px;
+  background: var(--bg);
+  color: var(--text);
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+button,
+a,
+input,
+select {
+  touch-action: manipulation;
+}
+button {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: not-allowed;
+}
+:focus-visible {
+  outline: 2px solid var(--acid);
+  outline-offset: 3px;
+}
+img {
+  max-width: 100%;
+  display: block;
+}
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+h1,
+h2,
+.display {
+  font-family: var(--font-display);
+  font-weight: 800;
+  line-height: 0.91;
+  text-transform: uppercase;
+  letter-spacing: -0.015em;
+}
+h1 {
+  font-size: var(--fs-fluid-59-136);
+}
+h2 {
+  font-size: var(--fs-fluid-48-96);
+}
+h3 {
+  font-size: var(--fs-20);
+}
+p {
+  line-height: 1.65;
+}
+/* Общая анимация появления блоков; в prefers-reduced-motion длительность сводится к нулю ниже. */
+@keyframes shift-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

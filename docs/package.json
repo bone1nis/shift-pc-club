@@ -1,0 +1,15 @@
+{
+  "name": "@shift/docs",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/swagger-assets.mjs && vitepress dev . --host 0.0.0.0 --port 5175",
+    "build": "node scripts/swagger-assets.mjs && vitepress build .",
+    "preview": "vitepress preview . --host 0.0.0.0 --port 5175",
+    "links": "node scripts/check-links.mjs"
+  },
+  "devDependencies": {
+    "vitepress": "^1.6.4",
+    "swagger-ui-dist": "^5.31.0"
+  }
+}

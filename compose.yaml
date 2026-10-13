@@ -1,0 +1,217 @@
+name: shift
+x-api: &api
+  build: { context: ., dockerfile: infra/php/Dockerfile }
+  image: shift-php:local
+  init: true
+  restart: unless-stopped
+  depends_on:
+    postgres: { condition: service_healthy }
+    rabbitmq: { condition: service_healthy }
+  extra_hosts: ['host.docker.internal:host-gateway']
+  logging:
+    driver: json-file
+    options: { max-size: '10m', max-file: '3' }
+x-environment: &environment
+  APP_NAME: SHIFT
+  APP_LOCALE: ru
+  APP_ENV: local
+  APP_DEBUG: 'false'
+  APP_ORIGIN: ${APP_ORIGIN:-http://localhost:8088}
+  APP_URL: ${APP_ORIGIN:-http://localhost:8088}
+  DB_CONNECTION: pgsql
+  DB_HOST: postgres
+  DB_PORT: 5432
+  REDIS_HOST: redis
+  REDIS_CLIENT: predis
+  # dev — ослабленные лимиты и окно заселения для разработки и автотестов; prod — строгие правила (см. .env.example).
+  SHIFT_MODE: ${SHIFT_MODE:-dev}
+  AUTH_RATE_LIMIT: ${AUTH_RATE_LIMIT:-}
+  API_RATE_LIMIT: ${API_RATE_LIMIT:-}
+  CHECKIN_EARLY_MINUTES: ${CHECKIN_EARLY_MINUTES:-}
+  RABBITMQ_HOST: rabbitmq
+  RABBITMQ_PORT: 5672
+  RABBITMQ_USER: ${RABBITMQ_USER:-shift}
+  RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:?Run scripts/setup.sh}
+  INTERNAL_TOKEN: ${INTERNAL_TOKEN:?Run scripts/setup.sh}
+  CSRF_SECRET: ${CSRF_SECRET:?Run scripts/setup.sh}
+  IDENTITY_URL: http://identity:8000
+  CLUB_URL: http://club:8000
+  BOOKING_URL: http://booking:8000
+  JWT_ISSUER: shift-identity
+  JWT_AUDIENCE: shift-api
+  JWT_PUBLIC_KEY_PATH: /run/secrets/jwt-public.pem
+  MAIL_MAILER: smtp
+  MAIL_HOST: mailpit
+  MAIL_PORT: 1025
+  MAIL_FROM_ADDRESS: hello@shift.local
+  LOG_CHANNEL: stack
+  LOG_STACK: daily
+  LOG_DAILY_DAYS: 7
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run scripts/setup.sh}
+      IDENTITY_DB_PASSWORD: ${IDENTITY_DB_PASSWORD:?Run scripts/setup.sh}
+      CLUB_DB_PASSWORD: ${CLUB_DB_PASSWORD:?Run scripts/setup.sh}
+      BOOKING_DB_PASSWORD: ${BOOKING_DB_PASSWORD:?Run scripts/setup.sh}
+      REPORTING_DB_PASSWORD: ${REPORTING_DB_PASSWORD:?Run scripts/setup.sh}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./infra/postgres/init.sh:/docker-entrypoint-initdb.d/01-init.sh:ro
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  redis:
+    image: redis:7-alpine
+    command: [redis-server, --appendonly, 'yes']
+    volumes: ['redisdata:/data']
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    hostname: shift-rabbit
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-shift}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?Run scripts/setup.sh}
+    ports: ['127.0.0.1:15678:15672']
+    volumes:
+      - rabbitdata:/var/lib/rabbitmq
+      - ./infra/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins:ro
+    healthcheck:
+      test: [CMD, rabbitmq-diagnostics, -q, ping]
+      interval: 5s
+      timeout: 10s
+      retries: 20
+  mailpit:
+    image: axllent/mailpit:v1.27
+    ports: ['127.0.0.1:8028:8025']
+  identity:
+    <<: *api
+    environment:
+      <<: *environment
+      DB_DATABASE: shift_identity
+      DB_USERNAME: identity
+      DB_PASSWORD: ${IDENTITY_DB_PASSWORD}
+      JWT_PRIVATE_KEY_PATH: /run/secrets/jwt-private.pem
+    volumes:
+      - ./services/identity:/app
+      - ./.runtime/keys/jwt-public.pem:/run/secrets/jwt-public.pem:ro
+      - ./.runtime/keys/jwt-private.pem:/run/secrets/jwt-private.pem:ro
+  club:
+    <<: *api
+    environment:
+      <<: *environment
+      DB_DATABASE: shift_club
+      DB_USERNAME: club
+      DB_PASSWORD: ${CLUB_DB_PASSWORD}
+    volumes:
+      - ./services/club:/app
+      - ./.runtime/keys/jwt-public.pem:/run/secrets/jwt-public.pem:ro
+  booking:
+    <<: *api
+    environment:
+      <<: *environment
+      CLUB_TIMEZONE: ${CLUB_TIMEZONE:-Europe/Moscow}
+      DB_DATABASE: shift_booking
+      DB_USERNAME: booking
+      DB_PASSWORD: ${BOOKING_DB_PASSWORD}
+    volumes:
+      - ./services/booking:/app
+      - ./.runtime/keys/jwt-public.pem:/run/secrets/jwt-public.pem:ro
+  booking-worker:
+    extends:
+      service: booking
+    command: php artisan events:consume
+  booking-report-worker:
+    extends:
+      service: booking
+    command: php artisan queue:work database --queue=reports --sleep=3 --tries=3 --timeout=60
+  booking-notification-worker:
+    extends:
+      service: booking
+    command: php artisan queue:work database --queue=notifications --sleep=3 --tries=3 --timeout=60
+  identity-scheduler:
+    extends:
+      service: identity
+    command: php artisan schedule:work
+  club-scheduler:
+    extends:
+      service: club
+    command: php artisan schedule:work
+  booking-scheduler:
+    extends:
+      service: booking
+    command: php artisan schedule:work
+  proxy:
+    image: nginx:1.27-alpine
+    ports: ['127.0.0.1:${SHIFT_HTTP_PORT:-8088}:80']
+    extra_hosts: ['host.docker.internal:host-gateway']
+    volumes:
+      - ./infra/proxy/${SHIFT_PROXY_CONF:-nginx.conf}:/etc/nginx/nginx.conf:ro
+      - proxylogs:/var/log/nginx
+  web:
+    profiles: [prod]
+    build: { context: ., dockerfile: infra/node/Dockerfile, target: web }
+    environment:
+      NUXT_API_INTERNAL_ORIGIN: http://proxy
+    restart: unless-stopped
+  static:
+    profiles: [prod]
+    build: { context: ., dockerfile: infra/node/Dockerfile, target: static }
+    restart: unless-stopped
+  grafana:
+    image: grafana/grafana:12.3.0
+    profiles: [monitoring]
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:?Run scripts/setup.sh}
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+      # Трейсов (Tempo) и профилей (Pyroscope) в проекте нет: отключаем пустые разделы Drilldown.
+      GF_PLUGINS_DISABLE_PLUGINS: grafana-exploretraces-app,grafana-pyroscope-app
+      REPORTING_DB_PASSWORD: ${REPORTING_DB_PASSWORD:?Run scripts/setup.sh}
+    ports: ['127.0.0.1:3038:3000']
+    volumes:
+      - grafanadata:/var/lib/grafana
+      - ./infra/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infra/monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    profiles: [monitoring]
+    command:
+      [
+        '--config.file=/etc/prometheus/prometheus.yml',
+        '--storage.tsdb.retention.time=7d',
+        '--storage.tsdb.retention.size=1GB',
+      ]
+    volumes:
+      - ./infra/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheusdata:/prometheus
+  loki:
+    image: grafana/loki:3.5.0
+    profiles: [monitoring]
+    command: ['-config.file=/etc/loki/config.yml']
+    volumes:
+      - ./infra/monitoring/loki.yml:/etc/loki/config.yml:ro
+      - lokidata:/loki
+  alloy:
+    image: grafana/alloy:v1.11.0
+    profiles: [monitoring]
+    command: [run, /etc/alloy/config.alloy, '--storage.path=/var/lib/alloy']
+    volumes:
+      - ./infra/monitoring/alloy.alloy:/etc/alloy/config.alloy:ro
+      - ./services/identity/storage/logs:/logs/identity:ro
+      - ./services/club/storage/logs:/logs/club:ro
+      - ./services/booking/storage/logs:/logs/booking:ro
+      - proxylogs:/logs/proxy:ro
+      - alloydata:/var/lib/alloy
+volumes:
+  pgdata:
+  redisdata:
+  rabbitdata:
+  proxylogs:
+  grafanadata:
+  prometheusdata:
+  lokidata:
+  alloydata:

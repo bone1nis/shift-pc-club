@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://shift.local/events/booking.checked_in.schema.json",
+  "title": "booking.checked_in",
+  "description": "Заселение по брони. Издатель: Booking.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["booking_id", "user_id"],
+  "properties": {
+    "booking_id": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "user_id": {
+      "type": "integer",
+      "minimum": 1
+    }
+  }
+}

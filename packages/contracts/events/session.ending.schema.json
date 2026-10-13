@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://shift.local/events/session.ending.schema.json",
+  "title": "session.ending",
+  "description": "Зарезервировано: уведомление об окончании создаётся напрямую в Booking.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["session_id", "user_id", "version"],
+  "properties": {
+    "session_id": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "user_id": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    }
+  }
+}

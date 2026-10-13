@@ -1,0 +1,63 @@
+{
+  "name": "shift-pc-club",
+  "private": true,
+  "packageManager": "pnpm@10.12.4",
+  "engines": {
+    "node": ">=22.21.0"
+  },
+  "scripts": {
+    "dev:web": "pnpm --filter @shift/web dev",
+    "dev:admin": "pnpm --filter @shift/admin dev",
+    "dev:docs": "pnpm --filter @shift/docs dev",
+    "dev:storybook": "pnpm --filter @shift/ui storybook",
+    "lint": "eslint apps packages tests --max-warnings 0",
+    "contracts:generate": "pnpm --filter @shift/contracts generate",
+    "contracts:check": "node packages/contracts/scripts/generate.mjs --check",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "pnpm --filter @shift/ui typecheck && pnpm --filter @shift/admin typecheck && pnpm --filter @shift/web typecheck",
+    "test:unit": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "build": "pnpm --filter @shift/web build && pnpm --filter @shift/admin build && pnpm --filter @shift/ui build-storybook && pnpm --filter @shift/docs build",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@eslint/js": "^9.39.0",
+    "@playwright/test": "^1.56.0",
+    "@types/node": "^22.20.5",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "@vitest/coverage-v8": "3.2.7",
+    "@vue/test-utils": "^2.4.6",
+    "eslint": "^9.39.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-vue": "^10.5.1",
+    "husky": "^9.1.7",
+    "jsdom": "^26.1.0",
+    "lint-staged": "^16.2.3",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.0",
+    "vitest": "^3.2.4"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,vue,js,mjs}": [
+      "prettier --write",
+      "eslint --fix"
+    ],
+    "*.{json,css,md,yml,yaml}": "prettier --write"
+  },
+  "pnpm": {
+    "auditConfig": {
+      "ignoreGhsas": [
+        "GHSA-858h-whjf-mvg5",
+        "GHSA-86w9-cpqp-85rv",
+        "GHSA-g4wm-2vf7-vfgr",
+        "GHSA-v5rq-49vh-5v5c",
+        "GHSA-vfj7-8cjw-p6xm",
+        "GHSA-x6jw-m9v5-85vh"
+      ]
+    }
+  }
+}

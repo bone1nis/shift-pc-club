@@ -1,0 +1,7 @@
+.swagger-viewer {
+  min-height: 30rem;
+  overflow-x: auto;
+}
+.swagger-viewer .swagger-ui {
+  color: var(--vp-c-text-1);
+}
