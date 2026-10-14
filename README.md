@@ -80,7 +80,7 @@ Browser → nginx proxy → Nuxt site / Vue admin
 
 Запись реального прохода по стенду: бронь игрока → заселение администратором → отчёты.
 
-[shift-demo.webm](https://github.com/user-attachments/assets/c6b059ce-df13-45a3-aeaa-efaa10af8a59)
+[demo.webm](https://github.com/user-attachments/assets/6661a311-d85f-4c3b-a055-4beb3b456168)
 
 Перезаписать видео можно командой `node docs/scripts/demo-video.mjs` на запущенном стенде (файл появится в `docs/public/demo/`; по умолчанию CRF 38, около 9 МБ — укладывается в лимит 10 МБ для вставки видео в README на GitHub, при необходимости меняется через `CRF`).
 
