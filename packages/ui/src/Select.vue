@@ -187,6 +187,7 @@ function onPanelKey(event: KeyboardEvent) {
 .select__trigger[aria-expanded='true'],
 .select__trigger:focus-visible {
   border-color: var(--acid);
+  outline: none;
 }
 .select__trigger[data-invalid='true'] {
   border-color: var(--danger);

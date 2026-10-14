@@ -4,6 +4,8 @@ import { VitePWA } from 'vite-plugin-pwa'
 import { fileURLToPath } from 'node:url'
 export default defineConfig({
   base: '/admin/',
+  // Общая статика (шрифты, иконки, favicon) лежит в packages/ui/public.
+  publicDir: fileURLToPath(new URL('../../packages/ui/public', import.meta.url)),
   plugins: [
     vue(),
     // PWA: панель можно установить на телефон администратора. Кэшируется только оболочка (скрипты, стили);

@@ -1,4 +1,4 @@
-/* global Buffer, sessionStorage, addEventListener, performance, requestAnimationFrame */
+/* global Buffer, sessionStorage, addEventListener, getComputedStyle, Image, performance, requestAnimationFrame, scrollY */
 // Записывает демо-видео (webm, 1080p) на запущенном стенде.
 // Запуск: node docs/scripts/demo-video.mjs [файл.webm]  (по умолчанию docs/public/demo/demo.webm)
 // Кадры берутся через CDP screencast (JPEG, высокое качество) и кодируются ffmpeg из Playwright (VP9).
@@ -66,10 +66,29 @@ cdp.on('Page.screencastFrame', async (f) => {
 })
 // Запись начинается только после полной загрузки страницы, чтобы в начале не было белого кадра.
 await page.goto('/', { waitUntil: 'load' })
+// Прогрев: ленивые картинки и фоны загружаем и декодируем заранее, иначе при появлении блока в кадре случаются подвисания.
+await page.evaluate(async () => {
+  const urls = new Set()
+  for (const img of document.images) {
+    img.loading = 'eager'
+    urls.add(img.currentSrc || img.src)
+  }
+  for (const el of document.querySelectorAll('*')) {
+    for (const m of getComputedStyle(el).backgroundImage.matchAll(/url\("?([^")]+)"?\)/g))
+      urls.add(m[1])
+  }
+  await Promise.all(
+    [...urls].map((u) => {
+      const i = new Image()
+      i.src = u
+      return i.decode().catch(() => {})
+    }),
+  )
+})
 await page.waitForTimeout(1500)
 await cdp.send('Page.startScreencast', {
   format: 'jpeg',
-  quality: 92,
+  quality: Number(process.env.JPEG_QUALITY ?? 85),
   maxWidth: W,
   maxHeight: H,
   everyNthFrame: 1,
@@ -79,7 +98,16 @@ const pause = (ms = 1200) => page.waitForTimeout(ms)
 let pos = { x: W / 2, y: H / 2 }
 
 async function moveTo(x, y) {
-  await page.mouse.move(x, y, { steps: 35 })
+  // Курсор двигаем по времени (≈60 событий/с с плавным разгоном), а не пачкой событий сразу: иначе в кадре он «телепортируется».
+  const from = pos
+  const dist = Math.hypot(x - from.x, y - from.y)
+  const steps = Math.max(12, Math.min(60, Math.round(dist / 18)))
+  for (let i = 1; i <= steps; i++) {
+    const t = i / steps
+    const e = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2
+    await page.mouse.move(from.x + (x - from.x) * e, from.y + (y - from.y) * e)
+    await page.waitForTimeout(16)
+  }
   pos = { x, y }
 }
 async function click(locator) {
@@ -112,6 +140,9 @@ async function scroll(dy, ms = 2500) {
   )
   await pause(600)
 }
+async function scrollTo(y, ms = 2500) {
+  await scroll(y - (await page.evaluate(() => window.scrollY)), ms)
+}
 async function type(label, text, opts = {}) {
   const field = page.getByLabel(label, opts)
   await click(field)
@@ -131,11 +162,23 @@ async function login(admin) {
 
 // 1. Лендинг
 await pause(2500)
-await scroll(1500, 4000)
-await scroll(1500, 4000)
-await scroll(1200, 3500)
-await scroll(-4200, 3500)
-await pause(800)
+// Листаем вниз по блокам, без возврата наверх: у каждого блока пауза, чтобы успели отыграть анимации появления.
+const blocks = await page.evaluate(() =>
+  [...document.querySelectorAll('main section, footer')]
+    .filter((el) => !el.parentElement.closest('section'))
+    .map((el) => {
+      const r = el.getBoundingClientRect()
+      return { top: Math.round(r.top + scrollY), height: Math.round(r.height) }
+    }),
+)
+for (const [i, b] of blocks.entries()) {
+  if (i === 0) continue
+  await scrollTo(b.top - 100, 1800)
+  // Высокий блок не помещается в экран целиком: домотаем до его низа.
+  if (b.height > H - 140) await scrollTo(b.top + b.height - H + 40, 1400)
+  await pause(i === blocks.length - 1 ? 2500 : 1700)
+}
+await pause(1000)
 
 // 2. Игрок: вход и бронь
 await login(false)
@@ -206,7 +249,7 @@ const ff = spawn(
     '-c:v',
     'libvpx-vp9',
     '-crf',
-    process.env.CRF ?? '32',
+    process.env.CRF ?? '38',
     '-b:v',
     process.env.BITRATE ?? '0',
     '-pix_fmt',
@@ -227,6 +270,14 @@ for (let i = 0; i <= total; i++) {
 }
 ff.stdin.end()
 await new Promise((r) => ff.on('close', r))
+if (process.env.GAPS) {
+  const gaps = []
+  for (let i = 1; i < frames.length; i++) {
+    const g = (frames[i].t - frames[i - 1].t) * 1000
+    if (g > 60) gaps.push(`${(frames[i - 1].t - t0).toFixed(1)}s +${Math.round(g)}мс`)
+  }
+  console.log(`Пауз между кадрами >60 мс: ${gaps.length}\n${gaps.join('\n')}`)
+}
 const perSecond = {}
 for (const f of frames) {
   const sec = Math.floor(f.t - t0)

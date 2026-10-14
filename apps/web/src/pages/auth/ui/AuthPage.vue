@@ -38,6 +38,8 @@ import { Container } from '@fsd/shared/ui'
   border: 1px solid var(--line);
 }
 .auth-page__eyebrow {
+  display: block;
+  margin-bottom: 52px;
   font-size: var(--fs-11);
   text-transform: uppercase;
   letter-spacing: 0.18em;

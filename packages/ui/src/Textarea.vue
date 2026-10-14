@@ -69,6 +69,7 @@ const textareaId = computed(() => props.id ?? generated)
 }
 .textarea__input:focus-visible {
   border-color: var(--acid);
+  outline: none;
 }
 .textarea__input[aria-invalid='true'] {
   border-color: var(--danger);

@@ -10,9 +10,7 @@ import { ArrowLink, StatGrid } from '@fsd/shared/ui'
 
 const ops = useOperationsStore()
 const catalog = computed(() => ops.catalog!)
-const available = computed(
-  () => catalog.value.workstations.filter((w) => w.status === 'available').length,
-)
+const available = computed(() => ops.freeWorkstations.length)
 const awaiting = computed(() => ops.sessions.filter((s) => s.status === 'awaiting_checkout').length)
 const upcoming = computed(() => ops.confirmedBookings.slice(0, 5))
 const seats = computed(() =>

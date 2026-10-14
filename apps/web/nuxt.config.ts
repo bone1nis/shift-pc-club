@@ -103,6 +103,8 @@ export default defineNuxtConfig({
     devOptions: { enabled: false },
   },
   nitro: {
+    // Шрифты, иконки и favicon общие для web, admin и Storybook: лежат в packages/ui/public.
+    publicAssets: [{ dir: fileURLToPath(new URL('../../packages/ui/public', import.meta.url)) }],
     devProxy: {
       '/api': {
         target: process.env.API_INTERNAL_ORIGIN || 'http://localhost:8088',

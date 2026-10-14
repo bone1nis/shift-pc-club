@@ -76,8 +76,7 @@ const inputId = computed(() => props.id ?? generated)
 }
 .field__input:focus-visible {
   border-color: var(--acid);
-  outline: 2px solid var(--acid);
-  outline-offset: 2px;
+  outline: none;
 }
 .field__input:disabled {
   opacity: 0.55;
