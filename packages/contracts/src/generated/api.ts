@@ -95,7 +95,12 @@ export interface IdentityApi {
   "GET /sessions": {
     request: undefined
     response: {
-      "data": Array<Record<string, unknown>>
+      "data": Array<{
+        "id": string
+        "created_at": string
+        "expires_at": string
+        "current": boolean
+      }>
     }
   }
   "DELETE /sessions/{id}": {

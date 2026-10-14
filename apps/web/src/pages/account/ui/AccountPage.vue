@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useRoute } from '#imports'
+import { navigateTo, useRoute } from '#imports'
 import { UiButton, UiEmpty, UiIcon, UiNotice, UiPanel, UiSkeleton } from '@shift/ui'
 import { BookingCard } from '@fsd/entities/booking'
 import { SessionCard, SessionHistoryTable } from '@fsd/entities/gaming-session'
@@ -26,6 +26,16 @@ const {
   active,
   history,
 } = account
+
+async function onAuthSessionRevoked(current: boolean) {
+  if (!current) {
+    notice.value = 'Сеанс отозван: на том устройстве вход завершится при следующем действии.'
+    return
+  }
+  // Отозван сеанс этого устройства: серверная cookie уже недействительна, сразу уходим на вход.
+  user.user = null
+  await navigateTo('/auth?next=/account')
+}
 </script>
 
 <template>
@@ -130,7 +140,7 @@ const {
             <hr class="account__divider" />
             <AuthSessionsList
               v-model="authSessions"
-              @revoked="notice = 'Сеанс отозван. Если это была текущая вкладка, войдите снова.'"
+              @revoked="onAuthSessionRevoked"
               @failed="error = $event"
             />
             <SignOutButtons @failed="error = $event" />

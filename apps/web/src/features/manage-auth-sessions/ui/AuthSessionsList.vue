@@ -8,9 +8,10 @@ export interface AuthSession {
   id: string
   created_at: string
   expires_at: string
+  current?: boolean
 }
 const sessions = defineModel<AuthSession[]>({ required: true })
-const emit = defineEmits<{ revoked: []; failed: [message: string] }>()
+const emit = defineEmits<{ revoked: [current: boolean]; failed: [message: string] }>()
 const pending = ref(false)
 
 async function revoke(session: AuthSession) {
@@ -19,7 +20,7 @@ async function revoke(session: AuthSession) {
   try {
     await api(`/api/auth/sessions/${encodeURIComponent(session.id)}`, { method: 'DELETE' })
     sessions.value = sessions.value.filter((item) => item.id !== session.id)
-    emit('revoked')
+    emit('revoked', session.current === true)
   } catch (cause) {
     emit('failed', errorMessage(cause))
   } finally {
@@ -38,7 +39,9 @@ async function revoke(session: AuthSession) {
     <p v-if="!sessions.length" class="auth-sessions__hint">Нет активных сеансов.</p>
     <ul class="auth-sessions__list">
       <li v-for="session in sessions" :key="session.id">
-        <span>Создан {{ dateTime(session.created_at) }}</span
+        <span
+          >Создан {{ dateTime(session.created_at) }}
+          <em v-if="session.current" class="auth-sessions__current">это устройство</em></span
         ><UiButton variant="ghost" size="sm" :disabled="pending" @click="revoke(session)"
           >Отозвать</UiButton
         >
@@ -62,6 +65,11 @@ async function revoke(session: AuthSession) {
 .auth-sessions__hint {
   font-size: var(--fs-13);
   color: var(--muted);
+}
+.auth-sessions__current {
+  margin-left: 6px;
+  color: var(--acid);
+  font-style: normal;
 }
 .auth-sessions__list {
   margin: 0;

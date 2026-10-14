@@ -47,6 +47,12 @@ class DomainTest extends TestCase
         $this->withHeader('Origin', 'https://attacker.test')->postJson('/api/auth/login', ['email' => 'x@y.test', 'password' => 'password'])->assertStatus(419);
     }
 
+    public function test_login_with_unknown_email_is_401_not_500(): void
+    {
+        $this->csrf();
+        $this->postJson('/api/auth/login', ['email' => 'nobody@shift.local', 'password' => 'whatever123'])->assertStatus(401);
+    }
+
     public function test_register_never_accepts_admin_role(): void
     {
         $this->csrf();
@@ -78,6 +84,21 @@ class DomainTest extends TestCase
         $this->withUnencryptedCookies($c)->getJson('/api/auth/me')->assertOk();
         $this->postJson('/api/auth/logout')->assertOk();
         $this->withUnencryptedCookies($c)->getJson('/api/auth/me')->assertUnauthorized();
+    }
+
+    public function test_sessions_mark_current_device_and_revoke_ends_it(): void
+    {
+        $first = $this->cookies($this->login());
+        $second = $this->cookies($this->postJson('/api/auth/login', ['email' => 'test@shift.local', 'password' => 'TestSecret123!'])->assertOk());
+
+        $list = $this->withUnencryptedCookies($first)->getJson('/api/auth/sessions')->assertOk()->json('data');
+        self::assertCount(2, $list);
+        self::assertCount(1, array_filter($list, fn (array $session): bool => $session['current']));
+
+        $other = array_values(array_filter($list, fn (array $session): bool => ! $session['current']))[0];
+        $this->withUnencryptedCookies($first)->deleteJson('/api/auth/sessions/'.$other['id'])->assertOk();
+        $this->withUnencryptedCookies($second)->getJson('/api/auth/me')->assertUnauthorized();
+        $this->withUnencryptedCookies($first)->getJson('/api/auth/me')->assertOk();
     }
 
     public function test_refresh_rotates_and_delayed_replay_revokes_family(): void

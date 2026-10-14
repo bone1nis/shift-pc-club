@@ -97,6 +97,8 @@ export const authSessionSchema = z.object({
   id: z.string(),
   created_at: isoDate,
   expires_at: isoDate,
+  /** Сеанс этого устройства (в списке помечается, при отзыве выполняется выход). */
+  current: z.boolean().optional(),
 })
 
 export const notificationSchema = z.object({

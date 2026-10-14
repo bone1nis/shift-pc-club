@@ -39,7 +39,7 @@ class AuthController extends Controller
         $v = $r->validate(['email' => 'required|email', 'password' => 'required|string|max:72']);
         $u = DB::table('users')->where('email', Str::lower($v['email']))->first();
         // Проверку bcrypt выполняем и для несуществующего адреса: время ответа не выдаёт, есть ли такой аккаунт.
-        $valid = Hash::check($v['password'], $u->password ?? '$2y$12$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi');
+        $valid = Hash::check($v['password'], $u->password ?? '$2y$12$PHV0uB7oylgCNWpAQqlZUeh8gF2p/uq2EHO6ACesIp1OqYzbC8adW');
         if (! ($u && $valid && $u->blocked_at === null)) {
             // Адрес и пароль в журнал не пишем: только причина.
             Log::warning('Неудачная попытка входа', ['event' => 'auth.login_failed', 'reason' => $u && $u->blocked_at !== null ? 'blocked' : 'bad_credentials']);
@@ -190,7 +190,12 @@ class AuthController extends Controller
 
     public function sessions(Request $r): JsonResponse
     {
-        return response()->json(['data' => DB::table('auth_sessions')->where('user_id', $r->attributes->get('actor')['id'])->whereNull('revoked_at')->where('expires_at', '>', now())->get(['id', 'created_at', 'expires_at'])]);
+        $currentSessionId = $r->attributes->get('claims')->sid ?? null;
+        $sessions = DB::table('auth_sessions')->where('user_id', $r->attributes->get('actor')['id'])->whereNull('revoked_at')->where('expires_at', '>', now())->orderByDesc('created_at')->get(['id', 'created_at', 'expires_at'])
+            ->map(fn (object $session): array => ['id' => $session->id, 'created_at' => $session->created_at, 'expires_at' => $session->expires_at, 'current' => $session->id === $currentSessionId])
+            ->all();
+
+        return response()->json(['data' => $sessions]);
     }
 
     public function revoke(Request $r, string $id): JsonResponse

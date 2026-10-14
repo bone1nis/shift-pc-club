@@ -1,5 +1,5 @@
 import { computed, onMounted, ref } from 'vue'
-import { useQuery } from '@tanstack/vue-query'
+import { useQuery, useQueryClient } from '@tanstack/vue-query'
 import { useIntervalFn } from '@vueuse/core'
 import { navigateTo } from '#imports'
 import {
@@ -9,6 +9,7 @@ import {
   notificationSchema,
 } from '@shift/contracts'
 import { z } from 'zod'
+import type { AuthSession } from '@fsd/features/manage-auth-sessions'
 import { useUserStore } from '@fsd/entities/user'
 import { apiParsed, errorMessage } from '@fsd/shared/api'
 
@@ -20,6 +21,7 @@ const POLL_MS = 30_000
  */
 export function useAccount() {
   const user = useUserStore()
+  const queryClient = useQueryClient()
   const notice = ref('')
   const now = ref(Date.now())
   // Запросы начинаются только после того, как мы убедились, что игрок вошёл.
@@ -43,7 +45,15 @@ export function useAccount() {
 
   const bookings = computed(() => query.data.value?.bookings ?? [])
   const sessions = computed(() => query.data.value?.sessions ?? [])
-  const authSessions = computed(() => query.data.value?.authSessions ?? [])
+  // Список сеансов записываемый: после отзыва компонент сразу убирает строку из кэша запроса, не дожидаясь опроса.
+  const authSessions = computed<AuthSession[]>({
+    get: () => query.data.value?.authSessions ?? [],
+    set: (value) => {
+      queryClient.setQueryData(['account'], (old: typeof query.data.value) =>
+        old ? { ...old, authSessions: value } : old,
+      )
+    },
+  })
   const notifications = computed(() => query.data.value?.notifications ?? [])
   const loading = computed(() => !checked.value || (query.isPending.value && signedIn.value))
   // Ошибку можно задать снаружи (из карточек бронирований и профиля) — поэтому она записываемая.
