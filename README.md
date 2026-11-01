@@ -17,7 +17,7 @@
 
 </div>
 
-<!-- ВСТАВЬ ВИДЕО: 01-landing.webm (перетащи файл в редактор README, оставь ссылку отдельной строкой) -->
+[01-landing.webm](https://github.com/user-attachments/assets/e31cd999-beed-44ba-97d0-f9a350674eb0)
 
 > Клуб, адрес и контакты вымышленные. Проект рассчитан на локальный запуск; публикации на хостинге нет, платёжный шлюз не подключён (оплата фиксируется в клубе).
 
@@ -266,27 +266,27 @@ scripts/backend.sh test realtime        # тесты сервиса на выд�
 
 **Полное демо (2 минуты): лендинг, бронь игрока, смена администратора**
 
-<!-- ВСТАВЬ ВИДЕО: demo.webm -->
+[demo.webm](https://github.com/user-attachments/assets/e9e00fae-cf0c-4092-8373-00e6e59ded99)
 
 **Бронирование**
 
-<!-- ВСТАВЬ ВИДЕО: 02-booking.webm -->
+[02-booking.webm](https://github.com/user-attachments/assets/c885eeed-3db7-4f45-9de2-795679da1a1f)
 
 **Кабинет обновляется сам (WebSocket-сигналы)**
 
-<!-- ВСТАВЬ ВИДЕО: 03-realtime-cabinet.webm -->
+[03-realtime-cabinet.webm](https://github.com/user-attachments/assets/73528952-35b6-4bdd-9e39-6cffafbcdcf5)
 
 **Живая карта зала в админке**
 
-<!-- ВСТАВЬ ВИДЕО: 04-hall-live.webm -->
+[04-hall-live.webm](https://github.com/user-attachments/assets/5e47ce74-6748-44e5-bd9a-3a35a8923196)
 
 **Чат брони и секретное сообщение**
 
-<!-- ВСТАВЬ ВИДЕО: 05-chat.webm -->
+[05-chat.webm](https://github.com/user-attachments/assets/8280ad02-a294-4656-bc20-b8d1553211f1)
 
 **Жалоба владельцу (E2E)**
 
-<!-- ВСТАВЬ ВИДЕО: 06-complaint.webm -->
+[06-complaint.webm](https://github.com/user-attachments/assets/2f97bcda-2271-46fe-b551-1f9e668f8249)
 
 Записать заново: `node docs/scripts/demo-video.mjs` на запущенном стенде (нужны Node 22 и `cwebp`/`img2webp`, на macOS они в `/opt/homebrew/bin`). Один клип: `node docs/scripts/demo-video.mjs 05`; клипы лежат в `docs/public/demo/clips/` (в git не входят, в README подключены загруженными на GitHub файлами). Для каждой записи скрипт создаёт свои аккаунты `e2e-demo-*@shift.local` и бронь на +5 суток и в конце их отменяет. Параметры: `CRF` (по умолчанию 38), `FPS`, `DUAL_FPS`, `PREVIEW_MAX_KB`, `CLIP_MAX_KB`.
 
