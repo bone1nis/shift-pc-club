@@ -296,7 +296,7 @@ scripts/backend.sh test realtime        # тесты сервиса на выд�
 
 ## Требования
 
-- Node.js 22 (мажорная версия зафиксирована в `.nvmrc`)
+- Node.js 22.22.0 (точная версия зафиксирована в `.nvmrc`; `nvm install` и `nvm use` подхватят её сами)
 - pnpm 10.12.4 (`corepack enable`, затем `corepack prepare pnpm@10.12.4 --activate`)
 - Docker Engine и Docker Compose v2
 - PHP 8.5 поставляется образом backend; Composer 2 включён в него
