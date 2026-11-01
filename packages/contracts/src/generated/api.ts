@@ -199,6 +199,104 @@ export interface ClubApi {
       }
     }
   }
+  "POST /complaints": {
+    request: undefined
+    response: {
+      "data": {
+        "id": number
+      }
+    }
+  }
+  "GET /owner-key": {
+    request: undefined
+    response: {
+      "data": {
+        "ownerKeyId": number
+        "publicKey": string
+      }
+    }
+  }
+  "GET /owner/complaints": {
+    request: undefined
+    response: {
+      "data": Array<{
+        "id": number
+        "category": string
+        "rating": number | null
+        "ownerKeyId": number
+        "ephemeralPublicKey": string
+        "nonce": string
+        "ciphertext": string
+        "status": string
+        "createdAt": string
+        "envelopes": Record<string, unknown>
+      }>
+      "meta": {
+        "page": number
+        "perPage": number
+        "total": number
+        "lastPage": number
+      }
+    }
+  }
+  "GET /owner/complaints/{id}": {
+    request: undefined
+    response: {
+      "data": {
+        "id": number
+        "category": string
+        "rating": number | null
+        "ownerKeyId": number
+        "ephemeralPublicKey": string
+        "nonce": string
+        "ciphertext": string
+        "status": string
+        "createdAt": string
+        "envelopes": Record<string, unknown>
+      }
+    }
+  }
+  "PATCH /owner/complaints/{id}": {
+    request: {
+      "status": "new" | "read" | "closed"
+    }
+    response: {
+      "data": {
+        "id": number
+        "category": string
+        "rating": number | null
+        "ownerKeyId": number
+        "ephemeralPublicKey": string
+        "nonce": string
+        "ciphertext": string
+        "status": string
+        "createdAt": string
+        "envelopes": Record<string, unknown>
+      }
+    }
+  }
+  "PUT /owner/key": {
+    request: undefined
+    response: {
+      "data": {
+        "ownerKeyId": number
+        "publicKey": string
+      }
+    }
+  }
+  "GET /owner/key-backup": {
+    request: undefined
+    response: {
+      "data": Array<{
+        "ownerKeyId": number
+        "publicKey": string
+        "active": boolean
+        "version": number
+        "blob": string
+        "createdAt": string
+      }>
+    }
+  }
   "GET /profile": {
     request: undefined
     response: {

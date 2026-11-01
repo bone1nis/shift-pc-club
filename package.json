@@ -51,13 +51,21 @@
   "pnpm": {
     "auditConfig": {
       "ignoreGhsas": [
+        "GHSA-3g3m-2fjr-6pw4",
         "GHSA-858h-whjf-mvg5",
         "GHSA-86w9-cpqp-85rv",
+        "GHSA-g3hv-75wg-m249",
         "GHSA-g4wm-2vf7-vfgr",
+        "GHSA-gcqx-w48m-w2h4",
         "GHSA-v5rq-49vh-5v5c",
         "GHSA-vfj7-8cjw-p6xm",
         "GHSA-x6jw-m9v5-85vh"
       ]
+    },
+    "overrides": {
+      "node-forge": ">=1.4.1",
+      "fast-uri": ">=3.1.9",
+      "serialize-javascript": ">=7.1.3"
     }
   }
 }
