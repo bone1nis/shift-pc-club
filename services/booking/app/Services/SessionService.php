@@ -51,6 +51,7 @@ class SessionService
     {
         $id = DB::table('gaming_sessions')->insertGetId(['workstation_id' => $workstationId, 'user_id' => $userId, 'booking_id' => $bookingId, 'starts_at' => $start, 'ends_at' => $end, 'hourly_price' => $hourlyPrice, 'total_price' => $price, 'status' => 'active', 'version' => 1, 'created_at' => now(), 'updated_at' => now()]);
         DB::table('allocations')->insert(['workstation_id' => $workstationId, 'session_id' => $id, 'starts_at' => $start, 'ends_at' => $end, 'active' => true]);
+        Outbox::record('session.started', ['session_id' => $id, 'user_id' => $userId, 'booking_id' => $bookingId, 'workstation_id' => $workstationId]);
 
         return $id;
     }
@@ -75,7 +76,9 @@ class SessionService
             DB::table('gaming_sessions')->where('id', $id)->update(['status' => 'completed', 'ended_at' => now(), 'updated_at' => now(), 'version' => $s->version + 1]);
             DB::table('allocations')->where('session_id', $id)->update(['active' => false]);
             ReservationService::audit($actor, 'session.completed', $id, []);
-            Outbox::record('session.completed', ['session_id' => $id, 'user_id' => $s->user_id]);
+            // booking_finished: у брони не осталось незавершённых сессий (по нему realtime закрывает чат брони).
+            $finished = $s->booking_id !== null && ! DB::table('gaming_sessions')->where('booking_id', $s->booking_id)->whereIn('status', ['active', 'awaiting_checkout'])->exists();
+            Outbox::record('session.completed', ['session_id' => $id, 'user_id' => $s->user_id, 'booking_id' => $s->booking_id === null ? null : (int) $s->booking_id, 'workstation_id' => (int) $s->workstation_id, 'booking_finished' => $finished]);
 
             return $this->session($id);
         });
@@ -93,6 +96,7 @@ class SessionService
             DB::table('allocations')->where('session_id', $id)->where('active', true)->update(['ends_at' => $end]);
             DB::table('gaming_sessions')->where('id', $id)->update(['ends_at' => $end, 'total_price' => $total, 'version' => $s->version + 1, 'updated_at' => now()]);
             ReservationService::audit($actor, 'session.extended', $id, ['minutes' => $minutes]);
+            Outbox::record('session.extended', ['session_id' => $id, 'user_id' => $s->user_id, 'workstation_id' => (int) $s->workstation_id]);
 
             return $this->session($id);
         });
@@ -133,6 +137,7 @@ class SessionService
             DB::table('allocations')->insert(['workstation_id' => $stationId, 'session_id' => $id, 'starts_at' => now(), 'ends_at' => $s->ends_at, 'active' => true]);
             DB::table('gaming_sessions')->where('id', $id)->update(['workstation_id' => $stationId, 'version' => $s->version + 1, 'updated_at' => now()]);
             ReservationService::audit($actor, 'session.moved', $id, ['from' => $s->workstation_id, 'to' => $stationId]);
+            Outbox::record('session.moved', ['session_id' => $id, 'user_id' => $s->user_id, 'workstation_id' => $stationId, 'from_workstation_id' => (int) $s->workstation_id]);
 
             return $this->session($id);
         });

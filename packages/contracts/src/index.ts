@@ -2,7 +2,7 @@ export interface User {
   id: number
   name: string
   email: string
-  role: 'admin' | 'player'
+  role: 'admin' | 'owner' | 'player'
 }
 export interface Zone {
   id: number
@@ -95,3 +95,4 @@ export interface ClubProfile {
   hours: Array<{ label: string; value: string }>
 }
 export * from './schemas'
+export * from './realtime'

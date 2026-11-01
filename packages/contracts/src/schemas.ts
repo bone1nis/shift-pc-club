@@ -23,7 +23,7 @@ export const userSchema = z.object({
   id: z.number(),
   name: z.string(),
   email: z.string(),
-  role: z.enum(['admin', 'player']),
+  role: z.enum(['admin', 'owner', 'player']),
 }) satisfies z.ZodType<User>
 
 export const zoneSchema = z.object({

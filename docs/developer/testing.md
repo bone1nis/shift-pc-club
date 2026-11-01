@@ -18,7 +18,7 @@
 - **ESLint** (`pnpm lint`): ошибки и стиль в `apps`, `packages`, `tests`. Предупреждения недопустимы (`--max-warnings 0`). Здесь же правило `fsd/boundaries`, которое не даёт слоям FSD импортировать «вверх».
 - **Prettier** (`pnpm format:check`, исправить — `pnpm format`): единое форматирование кода, JSON, CSS, Markdown.
 - **TypeScript** (`pnpm typecheck`): проверка типов в UI-ките, админке и сайте.
-- **Pint** и **PHPStan** (`./scripts/backend.sh lint`, `analyse`): стиль и статический анализ PHP во всех трёх сервисах.
+- **Pint** и **PHPStan** (`./scripts/backend.sh lint`, `analyse`): стиль и статический анализ PHP во всех четырёх сервисах.
 - **Husky** перед каждым коммитом запускает `lint-staged`: форматирование и `eslint --fix` для добавленных в коммит файлов.
 
 ## Unit-тесты (Vitest)

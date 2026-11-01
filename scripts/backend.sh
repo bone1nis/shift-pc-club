@@ -3,15 +3,15 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 mode="${1:-test}"
 service_scope="${2:-}"
-if [[ -n "$service_scope" && "$service_scope" != identity && "$service_scope" != club && "$service_scope" != booking ]]; then
-  echo 'Service must be identity, club or booking' >&2
+if [[ -n "$service_scope" && "$service_scope" != identity && "$service_scope" != club && "$service_scope" != booking && "$service_scope" != realtime ]]; then
+  echo 'Service must be identity, club, booking or realtime' >&2
   exit 1
 fi
 if [[ "$mode" == test ]]; then
   if [[ -f .runtime/test-db.env ]]; then
     while IFS='=' read -r test_password_key test_password_value; do
       case "$test_password_key" in
-        IDENTITY_TEST_DB_PASSWORD|CLUB_TEST_DB_PASSWORD|BOOKING_TEST_DB_PASSWORD)
+        IDENTITY_TEST_DB_PASSWORD|CLUB_TEST_DB_PASSWORD|BOOKING_TEST_DB_PASSWORD|REALTIME_TEST_DB_PASSWORD)
           if [[ -z "${!test_password_key:-}" ]]; then
             printf -v "$test_password_key" '%s' "$test_password_value"
           fi
@@ -22,8 +22,9 @@ if [[ "$mode" == test ]]; then
   : "${IDENTITY_TEST_DB_PASSWORD:?Configure a dedicated identity_test role first}"
   : "${CLUB_TEST_DB_PASSWORD:?Configure a dedicated club_test role first}"
   : "${BOOKING_TEST_DB_PASSWORD:?Configure a dedicated booking_test role first}"
+  : "${REALTIME_TEST_DB_PASSWORD:?Configure a dedicated realtime_test role first}"
 fi
-for service in identity club booking; do
+for service in identity club booking realtime; do
   if [[ -n "$service_scope" && "$service_scope" != "$service" ]]; then continue; fi
   case "$mode" in
     lint)
@@ -37,6 +38,7 @@ for service in identity club booking; do
         identity) test_password_variable=IDENTITY_TEST_DB_PASSWORD ;;
         club) test_password_variable=CLUB_TEST_DB_PASSWORD ;;
         booking) test_password_variable=BOOKING_TEST_DB_PASSWORD ;;
+        realtime) test_password_variable=REALTIME_TEST_DB_PASSWORD ;;
       esac
       DB_PASSWORD="${!test_password_variable}" docker compose exec -T \
         -e DB_PASSWORD -e APP_ENV=testing -e DB_CONNECTION=pgsql -e DB_URL= \

@@ -30,7 +30,10 @@ docs/.vitepress/.temp/
 docs/.vitepress/cache/
 
 # Личные рабочие заметки и инструкции для ИИ-ассистента (остаются у разработчика, в репозиторий не входят)
-CLAUDE.md
 .claude/
 PLAN.md
 PROGRESS.md
+CHAT.md
+
+# Демо-видео: загружаются на GitHub через редактор README, в репозиторий не входят
+docs/public/demo/

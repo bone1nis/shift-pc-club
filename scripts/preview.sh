@@ -4,7 +4,11 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 node -e 'if(Number(process.versions.node.split(".")[0]) < 22) process.exit(1)'
-docker compose up -d postgres redis rabbitmq mailpit identity club booking proxy booking-worker identity-scheduler club-scheduler booking-scheduler
+# По умолчанию фронтенд работает в Docker (web, static); для фронтов на хосте прокси переключается на dev-конфиг.
+export SHIFT_PROXY_CONF=nginx.conf
+docker compose stop web static >/dev/null 2>&1 || true
+docker compose up -d --force-recreate proxy
+docker compose up -d postgres redis rabbitmq mailpit identity club booking realtime reverb booking-worker realtime-worker identity-scheduler club-scheduler booking-scheduler
 pnpm --filter @shift/web build
 pnpm --filter @shift/admin build
 printf '\nSHIFT (продакшен-сборка): http://localhost:8088 | Админка: /admin/\n'

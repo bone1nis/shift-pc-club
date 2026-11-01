@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('auth')->group(function (): void {
     Route::get('csrf', [Auth::class, 'csrf'])->middleware('throttle:auth');
     Route::post('internal/introspect', [Auth::class, 'introspect'])->middleware('shift.internal');
+    Route::get('internal/owners/emails', [Auth::class, 'internalOwnerEmails'])->middleware('shift.internal');
     Route::get('internal/users/{id}', [Auth::class, 'internalUser'])->middleware('shift.internal');
     Route::middleware(['shift.csrf', 'throttle:auth'])->group(function (): void {
         Route::post('register', [Auth::class, 'register']);

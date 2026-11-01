@@ -17,6 +17,8 @@
   "dependencies": {
     "@date-fns/utc": "^2.1.1",
     "date-fns": "^4.4.0",
+    "laravel-echo": "^2.6.1",
+    "pusher-js": "^8.6.0",
     "vue": "^3.5.22"
   },
   "devDependencies": {

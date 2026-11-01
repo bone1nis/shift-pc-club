@@ -11,7 +11,7 @@ export default defineNuxtConfig({
   typescript: { strict: true, typeCheck: false },
   runtimeConfig: {
     apiInternalOrigin: process.env.API_INTERNAL_ORIGIN || 'http://localhost:8088',
-    public: { apiBase: '' },
+    public: { apiBase: '', reverbAppKey: process.env.REVERB_APP_KEY || '' },
   },
   app: {
     pageTransition: { name: 'page', mode: 'out-in' },

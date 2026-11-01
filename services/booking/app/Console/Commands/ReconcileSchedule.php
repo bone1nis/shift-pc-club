@@ -44,6 +44,7 @@ class ReconcileSchedule extends Command
                 }
                 if (now()->gte($s->ends_at)) {
                     DB::table('gaming_sessions')->where('id', $id)->update(['status' => 'awaiting_checkout', 'updated_at' => now()]);
+                    Outbox::record('session.awaiting_checkout', ['session_id' => (int) $id, 'user_id' => $s->user_id, 'workstation_id' => (int) $s->workstation_id]);
 
                     return;
                 }

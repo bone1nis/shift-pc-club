@@ -10,7 +10,8 @@ class Administrator
 {
     public function handle(Request $request, Closure $next): Response
     {
-        abort_unless(($request->attributes->get('actor')['role'] ?? null) === 'admin', 403, 'Administrator role required.');
+        // Владелец (owner) имеет все права администратора; обратное неверно.
+        abort_unless(in_array($request->attributes->get('actor')['role'] ?? null, ['admin', 'owner'], true), 403, 'Administrator role required.');
 
         return $next($request);
     }

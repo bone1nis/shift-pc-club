@@ -23,17 +23,17 @@ jobs:
       - run: node scripts/bootstrap.mjs
       - run: docker compose build identity
       - run: |
-          for service in identity club booking; do
+          for service in identity club booking realtime; do
             docker compose run --rm --no-deps "$service" composer install --no-interaction --prefer-dist
             docker compose run --rm --no-deps "$service" php artisan key:generate
           done
-      - run: docker compose up -d postgres redis rabbitmq mailpit identity club booking proxy
+      - run: docker compose up -d postgres redis rabbitmq mailpit identity club booking realtime reverb proxy
       - run: python3 scripts/isolate-test-databases.py
       - name: Актуальность типов API из OpenAPI
         run: node packages/contracts/scripts/generate.mjs --check
       - run: ./scripts/check.sh backend
       - run: |
-          for service in identity club booking; do
+          for service in identity club booking realtime; do
             docker compose exec -T "$service" composer audit --no-interaction
           done
       - if: failure()

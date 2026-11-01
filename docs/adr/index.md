@@ -8,3 +8,4 @@
 - [Бронь и сессии резервируют места одной транзакцией](/adr/0004-booking-reservation-in-one-transaction)
 - [Опрос вместо WebSocket на первом этапе](/adr/0005-polling-before-websockets)
 - [Перевод места на обслуживание подтверждает Booking](/adr/0006-maintenance-coordination)
+- [WebSocket-сигналы (Reverb) и E2E-шифрование секретов](/adr/0007-reverb-and-e2ee)

@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { navigateTo, useRoute } from '#imports'
 import { UiButton, UiEmpty, UiIcon, UiNotice, UiPanel, UiSkeleton } from '@shift/ui'
 import { BookingCard } from '@fsd/entities/booking'
 import { SessionCard, SessionHistoryTable } from '@fsd/entities/gaming-session'
 import { NotificationList } from '@fsd/entities/notification'
+import { BookingChat } from '@fsd/features/booking-chat'
 import { CancelBookingButton } from '@fsd/features/cancel-booking'
 import { ProfileForm } from '@fsd/features/edit-profile'
 import { AuthSessionsList } from '@fsd/features/manage-auth-sessions'
@@ -26,6 +28,16 @@ const {
   active,
   history,
 } = account
+// Приглашённый друг не владеет бронью, поэтому её карточки у него нет: чат открываем отдельно.
+const invitedChatId = computed(() => {
+  const id = Number(route.query.chat)
+  return !loading.value &&
+    Number.isInteger(id) &&
+    id > 0 &&
+    !bookings.value.some((b) => b.id === id)
+    ? id
+    : null
+})
 
 async function onAuthSessionRevoked(current: boolean) {
   if (!current) {
@@ -102,6 +114,10 @@ async function onAuthSessionRevoked(current: boolean) {
             <BookingCard v-for="booking in bookings" :key="booking.id" :booking="booking">
               <template #actions>
                 <RepeatBookingButton :booking="booking" @failed="error = $event" />
+                <BookingChat
+                  :booking-id="booking.id"
+                  :initial-open="route.query.chat === String(booking.id)"
+                />
                 <CancelBookingButton
                   v-if="booking.status === 'confirmed'"
                   :booking-id="booking.id"
@@ -116,6 +132,13 @@ async function onAuthSessionRevoked(current: boolean) {
               </template>
             </BookingCard>
           </div>
+
+          <template v-if="invitedChatId !== null">
+            <h2 class="account__title">Чат брони №{{ invitedChatId }}</h2>
+            <div class="account__stack">
+              <BookingChat :booking-id="invitedChatId" initial-open />
+            </div>
+          </template>
 
           <h2 class="account__title">Уведомления</h2>
           <NotificationList :items="notifications" :loading="loading" />
@@ -137,13 +160,16 @@ async function onAuthSessionRevoked(current: boolean) {
             </div>
             <h3>Профиль игрока</h3>
             <ProfileForm @saved="notice = 'Имя профиля сохранено.'" @failed="error = $event" />
+            <LinkButton to="/account/feedback" variant="secondary" block>
+              Жалоба или отзыв владельцу
+            </LinkButton>
+            <SignOutButtons @failed="error = $event" />
             <hr class="account__divider" />
             <AuthSessionsList
               v-model="authSessions"
               @revoked="onAuthSessionRevoked"
               @failed="error = $event"
             />
-            <SignOutButtons @failed="error = $event" />
           </UiPanel>
         </aside>
       </div>

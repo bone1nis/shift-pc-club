@@ -9,7 +9,7 @@ import secrets
 import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
-SERVICES = ('identity', 'club', 'booking')
+SERVICES = ('identity', 'club', 'booking', 'realtime')
 SECRET_FILE = ROOT / '.runtime' / 'test-db.env'
 
 
@@ -56,14 +56,14 @@ def main():
             raise RuntimeError('Use separate alphanumeric test passwords of at least 24 characters.')
         if admin(f"SELECT count(*) FROM pg_database WHERE datname='shift_{service}_test';") != '1':
             raise RuntimeError('Expected existing test database is missing; no database will be created.')
-    if len(set(passwords.values())) != 3:
+    if len(set(passwords.values())) != len(SERVICES):
         raise RuntimeError('Test passwords must differ.')
     SECRET_FILE.parent.mkdir(mode=0o700, exist_ok=True)
     fd = os.open(SECRET_FILE, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
     with os.fdopen(fd, 'w') as handle:
         handle.write(''.join(f'{key}={value}\n' for key, value in passwords.items()))
 
-    demo_before = admin("SELECT datname, datdba, datacl FROM pg_database WHERE datname IN ('shift_identity','shift_club','shift_booking') ORDER BY datname;")
+    demo_before = admin("SELECT datname, datdba, datacl FROM pg_database WHERE datname IN ('shift_identity','shift_club','shift_booking','shift_realtime') ORDER BY datname;")
     for service in SERVICES:
         role = f'{service}_test'
         database = f'shift_{service}_test'
@@ -137,12 +137,12 @@ COMMIT;
         actual = docker(args + ['-d', database], 'SELECT current_database(), current_user;', password).stdout.strip()
         if actual != f'{database}|{role}':
             raise RuntimeError('Unexpected authenticated database or user.')
-        for forbidden in ['shift_identity', 'shift_club', 'shift_booking', 'postgres'] + [f'shift_{s}_test' for s in SERVICES if s != service]:
+        for forbidden in ['shift_identity', 'shift_club', 'shift_booking', 'shift_realtime', 'postgres'] + [f'shift_{s}_test' for s in SERVICES if s != service]:
             result = docker(args + ['-d', forbidden], 'SELECT 1;', password, allow_failure=True)
             if result.returncode == 0:
                 raise RuntimeError('Test role can connect to a forbidden database.')
-        print(f'{role}: authenticated to own test database; six other database connections denied.')
-    if admin("SELECT datname, datdba, datacl FROM pg_database WHERE datname IN ('shift_identity','shift_club','shift_booking') ORDER BY datname;") != demo_before:
+        print(f'{role}: authenticated to own test database; all other database connections denied.')
+    if admin("SELECT datname, datdba, datacl FROM pg_database WHERE datname IN ('shift_identity','shift_club','shift_booking','shift_realtime') ORDER BY datname;") != demo_before:
         raise RuntimeError('Demo database ownership or ACL changed unexpectedly.')
     print('Demo database owners/ACL unchanged. No migrations or tests executed. Passwords saved in .runtime/test-db.env (600).')
 

@@ -13,7 +13,7 @@ class DatabaseSeeder extends Seeder
         if (! app()->environment('local', 'testing')) {
             throw new \RuntimeException('Demo seed is local only.');
         }
-        foreach ([['admin@shift.local', 'Администратор', 'admin'], ['player@shift.local', 'Игрок', 'player']] as [$email,$name,$role]) {
+        foreach ([['admin@shift.local', 'Администратор', 'admin'], ['player@shift.local', 'Игрок', 'player'], ['owner@shift.local', 'Владелец', 'owner']] as [$email,$name,$role]) {
             DB::table('users')->insertOrIgnore(['email' => $email, 'name' => $name, 'password' => Hash::make('ShiftDemo2026!'), 'role' => $role, 'created_at' => now(), 'updated_at' => now()]);
         }
     }

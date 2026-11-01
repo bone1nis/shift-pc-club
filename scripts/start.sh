@@ -14,7 +14,7 @@ docker run --rm --user "$(id -u):$(id -g)" -v "$PWD":/app -w /app node:22-alpine
 
 export SHIFT_PROXY_CONF=nginx.prod.conf
 ./scripts/backend-init.sh
-docker compose --profile prod up -d --build web static proxy
+docker compose up -d --build web static proxy
 if [[ "${1:-}" == "--monitoring" ]]; then
   docker compose --profile monitoring up -d
 fi
@@ -34,7 +34,8 @@ cat <<INFO
 Тестовые аккаунты (создаются только локально):
   Администратор   admin@shift.local   пароль ShiftDemo2026!
   Игрок           player@shift.local  пароль ShiftDemo2026!
+  Владелец        owner@shift.local   пароль ShiftDemo2026! (права админа + раздел «Жалобы»)
 
 Grafana (с --monitoring): http://localhost:3038/  логин admin  пароль ${grafana}
-Остановить: docker compose --profile prod --profile monitoring down   (данные сохраняются)
+Остановить: docker compose --profile monitoring down   (данные сохраняются)
 INFO

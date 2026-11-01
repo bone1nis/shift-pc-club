@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { UiButton, UiField, UiIcon, UiLogo, UiNotice, UiPanel } from '@shift/ui'
 import { useUserStore } from '@fsd/entities/user'
 import { ApiFailure, errorMessage } from '@fsd/shared/api'
+import { canUseAdminPanel } from '@fsd/shared/lib'
 
 const user = useUserStore()
 const router = useRouter()
@@ -20,7 +21,7 @@ async function login() {
   fields.value = {}
   try {
     await user.signIn(email.value, password.value)
-    if (user.user?.role !== 'admin') {
+    if (!canUseAdminPanel(user.user?.role)) {
       error.value = 'Для панели нужны права администратора.'
       return
     }

@@ -1,6 +1,6 @@
 # HTTP API и события
 
-API доступно через единый origin с префиксами `/api/auth/`, `/api/club/` и `/api/booking/`. Основные публичные/пользовательские маршруты перечислены ниже; внутренние операции не являются публичным API.
+API доступно через единый origin с префиксами `/api/auth/`, `/api/club/`, `/api/booking/` и `/api/realtime/`. Основные публичные/пользовательские маршруты перечислены ниже; внутренние операции не являются публичным API.
 
 ## Identity
 
@@ -23,6 +23,19 @@ API доступно через единый origin с префиксами `/ap
 - `POST /api/booking/bookings` принимает ключ `Idempotency-Key`. При сетевом повторе используйте тот же ключ для того же запроса.
 - `POST /api/booking/events` — публичный приём анонимных событий сайта (`page_view`, `booking_started`): разрешены только перечисленные типы и пути `/`, `/booking`, `/auth`, `/account`; идентификатор посетителя — случайный UUID вкладки; боты, чужой Origin и повторы в окне 30 минут (`ANALYTICS_DEDUPE_MINUTES`) отбрасываются, ответ 204 или 202. Успешные брони считаются по серверным данным, а не по событиям.
 - `/api/booking/internal/*` предназначен для межсервисного доступа.
+
+## Club: жалобы
+
+- `GET /api/club/owner-key` — публичный ключ владельца (для шифрования жалобы на клиенте).
+- `POST /api/club/complaints` — отправить зашифрованную жалобу или отзыв (до 5 в сутки на пользователя).
+- `/api/club/owner/*` — ключ и код восстановления, список жалоб, просмотр и смена статуса (`PATCH complaints/{id}`). Только роль `owner`; `admin` получает `403`.
+
+## Realtime
+
+- `POST /api/realtime/broadcasting/auth` — авторизация приватных и presence-каналов WebSocket.
+- `/api/realtime/conversations/{bookingId}/*` — диалог брони: сообщения, прочитанное, вложения, модерация; `POST bookings/{bookingId}/invitations` и `invitations/{token}/accept` — приглашения.
+- `POST /api/realtime/devices`, `DELETE devices/{id}` — ключи устройств для секретных сообщений.
+- Полный список — на странице [Realtime](/developer/services/realtime).
 
 Scramble установлен в сервисах. Спецификации публикуются по `/api/auth/openapi.json`, `/api/club/openapi.json` и `/api/booking/openapi.json`; страницы [Swagger UI Identity](/api/identity/), [Club](/api/club/) и [Booking](/api/booking/) загружают их через локальный origin. Пока backend endpoint не включён в запущенном сервисе, viewer сообщит, что схему загрузить не удалось. Не используйте внутренние endpoints из браузера и не подставляйте cookie как Bearer-токен.
 

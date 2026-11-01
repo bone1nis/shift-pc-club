@@ -50,3 +50,9 @@ Booking (транзакция)                     RabbitMQ                По�
 - Возраст растёт дольше минуты — публикация не идёт. Проверьте `docker compose ps` (`rabbitmq`, `booking-scheduler`) и лог Booking: сбой публикации пишется как «Outbox publishing failed» с причиной.
 - События в `shift.booking.dead` — это сообщения, которые не удалось обработать; их причину ищите в логах воркера по `event_id` (Grafana → Loki).
 - Дашборд Grafana и алерты следят за размером и возрастом `outbox`, задержкой очереди и сердцебиением планировщика.
+
+## События для Realtime
+
+Сервис Realtime подписан на `booking.confirmed`, `booking.cancelled`, `booking.checked_in`, `booking.no_show`, `booking.reminder`, `booking.maintenance_changed`, `session.#`, `club.#` и `complaint.#`. Он ведёт по ним состав участников чата, закрывает чат по отмене, неявке и завершению и рассылает WebSocket-сигналы `account.changed`, `hall.changed` и `complaint.created` (тело `{type, id}`, без данных). Правила те же: `event_id` в `inbox`, ack после сохранения, до 4 попыток и своя dead-letter очередь `realtime.dead` ([подробнее](/developer/services/realtime)).
+
+Booking для этого добавил события `session.started`, `session.extended`, `session.moved`, `session.awaiting_checkout`, `booking.maintenance_changed`, а `session.completed` дополнил полями `booking_id`, `workstation_id`, `booking_finished`. Club пишет в outbox `complaint.created`. Поля только добавлялись, старые получатели не затронуты.

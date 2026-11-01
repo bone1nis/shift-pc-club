@@ -26,3 +26,19 @@ export { default as UiTabs } from './Tabs.vue'
 export type { TabOption } from './Tabs.vue'
 export { default as UiDisclosure } from './Disclosure.vue'
 export { default as UiTextarea } from './Textarea.vue'
+export {
+  createRealtime,
+  configureRealtime,
+  useRealtime,
+  useRealtimeSession,
+  useRealtimeChannel,
+} from './lib/realtime'
+export type {
+  RealtimeStatus,
+  RealtimeClient,
+  RealtimeOptions,
+  EchoLike,
+  PresenceMember,
+  PresenceHandlers,
+  PresenceHandle,
+} from './lib/realtime'

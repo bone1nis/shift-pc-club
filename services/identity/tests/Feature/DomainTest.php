@@ -2,11 +2,15 @@
 
 namespace Tests\Feature;
 
+use App\Http\Middleware\Administrator;
+use App\Http\Middleware\OwnerOnly;
 use Firebase\JWT\JWT;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Testing\TestResponse;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
 
 class DomainTest extends TestCase
@@ -57,6 +61,42 @@ class DomainTest extends TestCase
     {
         $this->csrf();
         $this->postJson('/api/auth/register', ['name' => 'Player', 'email' => 'new@shift.local', 'password' => 'TestSecret123!', 'role' => 'admin'])->assertCreated()->assertJsonPath('data.role', 'player');
+    }
+
+    public function test_register_never_accepts_owner_role(): void
+    {
+        $this->csrf();
+        $this->postJson('/api/auth/register', ['name' => 'Player', 'email' => 'new2@shift.local', 'password' => 'TestSecret123!', 'role' => 'owner'])->assertCreated()->assertJsonPath('data.role', 'player');
+        self::assertSame('player', DB::table('users')->where('email', 'new2@shift.local')->value('role'));
+    }
+
+    public function test_owner_passes_admin_checks_and_admin_is_not_owner(): void
+    {
+        $cookies = $this->cookies($this->login());
+        DB::table('users')->where('email', 'test@shift.local')->update(['role' => 'owner']);
+        $this->withUnencryptedCookies($cookies)->getJson('/api/auth/me')->assertOk()->assertJsonPath('data.role', 'owner');
+        $this->getJson('/api/auth/admin/users?query=test%40shift.local')->assertOk()->assertJsonPath('data.users.0.role', 'owner');
+
+        $request = Request::create('/x');
+        $next = fn () => response('ok');
+        foreach ([['owner', 'owner', 200], ['admin', 'owner', 403], ['player', 'owner', 403], ['owner', 'admin', 200], ['admin', 'admin', 200], ['player', 'admin', 403]] as [$role, $guard, $status]) {
+            $request->attributes->set('actor', ['id' => 1, 'role' => $role]);
+            $middleware = $guard === 'owner' ? new OwnerOnly : new Administrator;
+            try {
+                self::assertSame($status, $middleware->handle($request, $next)->getStatusCode());
+            } catch (HttpException $e) {
+                self::assertSame($status, $e->getStatusCode());
+            }
+        }
+    }
+
+    public function test_demo_seed_creates_owner_idempotently(): void
+    {
+        $this->seed();
+        $this->seed();
+        self::assertSame('owner', DB::table('users')->where('email', 'owner@shift.local')->value('role'));
+        self::assertSame(1, DB::table('users')->where('email', 'owner@shift.local')->count());
+        self::assertSame('admin', DB::table('users')->where('email', 'admin@shift.local')->value('role'));
     }
 
     public function test_profile_updates_name_but_never_email_or_role(): void
@@ -150,6 +190,24 @@ class DomainTest extends TestCase
         $this->withHeader('X-Internal-Token', config('shift.internal_token'))->getJson('/api/auth/internal/users/'.$id)->assertOk()->assertJsonPath('data.id', $id);
         DB::table('users')->where('id', $id)->update(['blocked_at' => now()]);
         $this->getJson('/api/auth/internal/users/'.$id)->assertNotFound();
+    }
+
+    public function test_internal_owner_emails_lists_only_active_owners_and_needs_token(): void
+    {
+        $now = now();
+        DB::table('users')->insert([
+            ['name' => 'O1', 'email' => 'o1@shift.local', 'password' => 'x', 'role' => 'owner', 'blocked_at' => null, 'created_at' => $now, 'updated_at' => $now],
+            ['name' => 'O2', 'email' => 'o2@shift.local', 'password' => 'x', 'role' => 'owner', 'blocked_at' => $now, 'created_at' => $now, 'updated_at' => $now],
+            ['name' => 'P', 'email' => 'p1@shift.local', 'password' => 'x', 'role' => 'player', 'blocked_at' => null, 'created_at' => $now, 'updated_at' => $now],
+            ['name' => 'A', 'email' => 'a1@shift.local', 'password' => 'x', 'role' => 'admin', 'blocked_at' => null, 'created_at' => $now, 'updated_at' => $now],
+        ]);
+        $this->getJson('/api/auth/internal/owners/emails')->assertForbidden();
+        $this->withHeader('X-Internal-Token', 'wrong')->getJson('/api/auth/internal/owners/emails')->assertForbidden();
+        $emails = $this->withHeader('X-Internal-Token', config('shift.internal_token'))->getJson('/api/auth/internal/owners/emails')->assertOk()->json('data.emails');
+        self::assertContains('o1@shift.local', $emails);
+        self::assertNotContains('o2@shift.local', $emails);
+        self::assertNotContains('p1@shift.local', $emails);
+        self::assertNotContains('a1@shift.local', $emails);
     }
 
     public function test_introspection_key_outage_is_503_and_invalid_token_401(): void

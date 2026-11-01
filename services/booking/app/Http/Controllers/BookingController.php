@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Jobs\SendNotificationEmail;
 use App\Services\AdminReportService;
 use App\Services\CatalogProjection;
+use App\Services\Outbox;
 use App\Services\ReservationService;
 use App\Services\SessionService;
 use Carbon\CarbonImmutable;
@@ -73,7 +74,7 @@ class BookingController extends Controller
     public function booking(Request $r, int $id): JsonResponse
     {
         $b = $this->reservations->booking($id);
-        abort_unless($r->attributes->get('actor')['role'] === 'admin' || $b['user_id'] === $r->attributes->get('actor')['id'], 404);
+        abort_unless(in_array($r->attributes->get('actor')['role'], ['admin', 'owner'], true) || $b['user_id'] === $r->attributes->get('actor')['id'], 404);
 
         return response()->json(['data' => $b]);
     }
@@ -81,7 +82,7 @@ class BookingController extends Controller
     public function cancel(Request $r, int $id): JsonResponse
     {
         $actor = $r->attributes->get('actor');
-        $this->reservations->cancel($id, (int) $actor['id'], $actor['role'] === 'admin');
+        $this->reservations->cancel($id, (int) $actor['id'], in_array($actor['role'], ['admin', 'owner'], true));
 
         return response()->json(['data' => $this->reservations->booking($id)]);
     }
@@ -151,6 +152,7 @@ class BookingController extends Controller
             if ($v['blocked']) {
                 abort_if(DB::table('allocations')->where('workstation_id', $id)->where('active', true)->where('ends_at', '>', now())->exists() || DB::table('gaming_sessions')->where('workstation_id', $id)->whereIn('status', ['active', 'awaiting_checkout'])->exists(), 409, 'Workstation is reserved or occupied.');
             }DB::table('workstations')->where('id', $id)->update(['maintenance_locked' => $v['blocked']]);
+            Outbox::record('booking.maintenance_changed', ['workstation_id' => $id, 'blocked' => (bool) $v['blocked']]);
         });
 
         return response()->json(['data' => null]);

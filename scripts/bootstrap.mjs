@@ -42,7 +42,7 @@ if (!existsSync(resolve(keys, 'jwt-private.pem'))) {
   writeFileSync(resolve(keys, 'jwt-private.pem'), pair.privateKey, { mode: 0o600 })
   writeFileSync(resolve(keys, 'jwt-public.pem'), pair.publicKey)
 }
-for (const service of ['identity', 'club', 'booking']) {
+for (const service of ['identity', 'club', 'booking', 'realtime']) {
   const target = resolve(root, 'services', service, '.env')
   const example = resolve(root, 'services', service, '.env.example')
   if (!existsSync(target) && existsSync(example)) {

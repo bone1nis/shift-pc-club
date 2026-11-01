@@ -168,6 +168,14 @@ class AuthController extends Controller
         return response()->json(['data' => ['id' => (int) $user->id, 'role' => $user->role, 'name' => $user->name, 'email' => $user->email]]);
     }
 
+    /** Адреса активных владельцев клуба для служебных писем. */
+    public function internalOwnerEmails(): JsonResponse
+    {
+        $emails = DB::table('users')->where('role', 'owner')->whereNull('blocked_at')->orderBy('id')->pluck('email')->all();
+
+        return response()->json(['data' => ['emails' => array_values($emails)]]);
+    }
+
     public function logout(Request $r): JsonResponse
     {
         // Cookie обновления позволяет выйти, даже когда токен доступа уже истёк.

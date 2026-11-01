@@ -78,12 +78,12 @@ function sessionExpired(path: string): void {
   const next = window.location.pathname + window.location.search
   window.location.assign(LOGIN_PATH + '?next=' + encodeURIComponent(next))
 }
-export async function api<T>(
+async function envelope<T>(
   path: string,
   options: RequestInit = {},
   retry = true,
   refreshCsrf = false,
-): Promise<T> {
+): Promise<ApiResponse<T> | undefined> {
   const headers = new Headers(options.headers)
   headers.set('Accept', 'application/json')
   if (options.body) headers.set('Content-Type', 'application/json')
@@ -92,7 +92,7 @@ export async function api<T>(
   const response = await fetch(path, { ...options, headers, credentials: 'include' })
   if (response.status === 419 && !refreshCsrf && options.method && options.method !== 'GET') {
     // Токен в cookie мог устареть после действий в другой вкладке или смены сессии: обновляем его один раз и повторяем запрос.
-    return api<T>(path, options, retry, true)
+    return envelope<T>(path, options, retry, true)
   }
   if (response.status === 401 && retry && !publicAuth.has(path)) {
     refreshing ??= refresh().finally(() => {
@@ -104,7 +104,7 @@ export async function api<T>(
       if (e instanceof ApiFailure && e.status === 401) sessionExpired(path)
       throw e
     }
-    return api<T>(path, options, false)
+    return envelope<T>(path, options, false)
   }
   if (response.status === 401) sessionExpired(path)
   if (!response.ok) {
@@ -115,8 +115,21 @@ export async function api<T>(
       error.message || 'Сервис временно недоступен. Попробуйте ещё раз.',
     )
   }
-  if (response.status === 204) return undefined as T
-  return ((await response.json()) as ApiResponse<T>).data
+  if (response.status === 204) return undefined
+  return (await response.json()) as ApiResponse<T>
+}
+export async function api<T>(
+  path: string,
+  options: RequestInit = {},
+  retry = true,
+  refreshCsrf = false,
+): Promise<T> {
+  return (await envelope<T>(path, options, retry, refreshCsrf))?.data as T
+}
+/** Как api(), но возвращает весь ответ вместе с meta (для постраничных списков). */
+export async function apiPage<T>(path: string): Promise<{ data: T; meta: Record<string, number> }> {
+  const result = (await envelope<T>(path)) as { data: T; meta?: Record<string, number> }
+  return { data: result.data, meta: result.meta ?? {} }
 }
 export function errorMessage(error: unknown): string {
   return error instanceof Error

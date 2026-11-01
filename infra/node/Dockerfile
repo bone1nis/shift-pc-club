@@ -10,6 +10,9 @@ COPY packages/contracts/package.json packages/contracts/
 COPY docs/package.json docs/
 RUN pnpm install --frozen-lockfile --ignore-scripts
 COPY . .
+# Публичный ключ Reverb вшивается в статику админки при сборке.
+ARG REVERB_APP_KEY=
+ENV REVERB_APP_KEY=$REVERB_APP_KEY
 RUN pnpm --filter @shift/web exec nuxt prepare \
  && pnpm --filter @shift/web build \
  && pnpm --filter @shift/admin build \

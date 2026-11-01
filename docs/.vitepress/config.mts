@@ -17,9 +17,24 @@ export default defineConfig({
       { text: 'Решения', link: '/adr/' },
     ],
     sidebar: {
-      '/user/': [{ text: 'Игрокам', items: [{ text: 'Бронирование и кабинет', link: '/user/' }] }],
+      '/user/': [
+        {
+          text: 'Игрокам',
+          items: [
+            { text: 'Бронирование и кабинет', link: '/user/' },
+            { text: 'Чат брони и секретные сообщения', link: '/user/chat' },
+            { text: 'Жалобы владельцу', link: '/user/complaints' },
+          ],
+        },
+      ],
       '/admin/': [
-        { text: 'Администраторам', items: [{ text: 'Работа со сменой', link: '/admin/' }] },
+        {
+          text: 'Администраторам',
+          items: [
+            { text: 'Работа со сменой', link: '/admin/' },
+            { text: 'Жалобы: ключ владельца и код восстановления', link: '/admin/owner-key' },
+          ],
+        },
       ],
       '/developer/': [
         {
@@ -31,6 +46,7 @@ export default defineConfig({
             { text: 'Identity', link: '/developer/services/identity' },
             { text: 'Club', link: '/developer/services/club' },
             { text: 'Booking', link: '/developer/services/booking' },
+            { text: 'Realtime', link: '/developer/services/realtime' },
             { text: 'Сервисы и фронтенд', link: '/developer/services/frontend-flow' },
             { text: 'Фронтенд и UI-кит', link: '/developer/frontend' },
             { text: 'Тесты и проверки', link: '/developer/testing' },
@@ -69,6 +85,10 @@ export default defineConfig({
             {
               text: 'Перевод места на обслуживание подтверждает Booking',
               link: '/adr/0006-maintenance-coordination',
+            },
+            {
+              text: 'WebSocket-сигналы (Reverb) и E2E-шифрование секретов',
+              link: '/adr/0007-reverb-and-e2ee',
             },
           ],
         },

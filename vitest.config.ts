@@ -8,7 +8,15 @@ export default defineConfig({
       vue: fileURLToPath(
         new URL('./apps/web/node_modules/vue/dist/vue.runtime.esm-bundler.js', import.meta.url),
       ),
+      '@shift/e2ee': fileURLToPath(new URL('./packages/e2ee/src/index.ts', import.meta.url)),
       '@shift/ui': fileURLToPath(new URL('./packages/ui/src/index.ts', import.meta.url)),
+      '@tanstack/vue-query': fileURLToPath(
+        new URL('./apps/web/node_modules/@tanstack/vue-query', import.meta.url),
+      ),
+      '@vueuse/core': fileURLToPath(
+        new URL('./apps/web/node_modules/@vueuse/core', import.meta.url),
+      ),
+      '#imports': fileURLToPath(new URL('./tests/unit/support/nuxt-imports.ts', import.meta.url)),
       '@fsd': fileURLToPath(new URL('./apps/web/src', import.meta.url)),
     },
   },

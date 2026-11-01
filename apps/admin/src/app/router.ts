@@ -1,5 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '@fsd/entities/user'
+import { canUseAdminPanel, canUseComplaints } from '@fsd/shared/lib'
+import { ComplaintsPage } from '@fsd/pages/complaints'
 import { ClubPage } from '@fsd/pages/club'
 import { AuditPage } from '@fsd/pages/audit'
 import { LoginPage } from '@fsd/pages/auth'
@@ -26,6 +28,7 @@ export const router = createRouter({
     { path: '/notifications', component: NotificationsPage, meta: { title: 'Уведомления' } },
     { path: '/processing', component: ProcessingPage, meta: { title: 'Обработка' } },
     { path: '/audit', component: AuditPage, meta: { title: 'История действий' } },
+    { path: '/complaints', component: ComplaintsPage, meta: { title: 'Жалобы', ownerOnly: true } },
     { path: '/:pathMatch(.*)*', redirect: '/' },
   ],
 })
@@ -33,5 +36,14 @@ router.beforeEach(async (to) => {
   if (to.path === '/login') return
   const store = useUserStore()
   if (!store.loaded) await store.load()
-  if (store.user?.role !== 'admin') return '/login'
+  if (!canUseAdminPanel(store.user?.role)) {
+    // Вошедший игрок в админке не нужен: сразу уводим на сайт. Без входа — на форму входа админки.
+    if (store.user) {
+      window.location.replace('/')
+      return false
+    }
+    return '/login'
+  }
+  // Раздел владельца: администратору (и любой другой роли) прямой переход возвращает на главную.
+  if (to.meta.ownerOnly && !canUseComplaints(store.user?.role)) return '/'
 })

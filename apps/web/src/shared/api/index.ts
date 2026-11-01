@@ -5,6 +5,7 @@ export class ApiFailure extends Error {
     public status: number,
     public fields: Record<string, string[]> = {},
     message = 'Не удалось выполнить запрос',
+    public code?: string,
   ) {
     super(message)
   }
@@ -114,10 +115,63 @@ export async function api<T>(
       response.status,
       error.errors,
       error.message || 'Сервис временно недоступен. Попробуйте ещё раз.',
+      error.code,
     )
   }
   if (response.status === 204) return undefined as T
   return ((await response.json()) as ApiResponse<T>).data
+}
+/**
+ * Загрузка файла (multipart) с прогрессом: fetch не умеет сообщать о ходе отправки, поэтому XHR.
+ * Ошибки приходят как ApiFailure, как и у `api`; при 401 один раз обновляем сессию.
+ */
+export async function apiUpload<T>(
+  path: string,
+  form: FormData,
+  onProgress?: (fraction: number) => void,
+  retry = true,
+): Promise<T> {
+  const token = await csrf()
+  const send = () =>
+    new Promise<{ status: number; body: unknown }>((resolve, reject) => {
+      const xhr = new XMLHttpRequest()
+      xhr.open('POST', path)
+      xhr.withCredentials = true
+      xhr.setRequestHeader('Accept', 'application/json')
+      xhr.setRequestHeader('X-CSRF-TOKEN', token)
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable && e.total > 0) onProgress?.(e.loaded / e.total)
+      }
+      xhr.onerror = () =>
+        reject(new ApiFailure(0, {}, 'Ошибка соединения. Проверьте доступность сервера.'))
+      xhr.onload = () => {
+        let body: unknown = {}
+        try {
+          body = JSON.parse(xhr.responseText)
+        } catch {
+          /* тело не JSON */
+        }
+        resolve({ status: xhr.status, body })
+      }
+      xhr.send(form)
+    })
+  const { status, body } = await send()
+  if (status === 401 && retry) {
+    refreshing ??= refresh().finally(() => {
+      refreshing = undefined
+    })
+    await refreshing
+    return apiUpload<T>(path, form, onProgress, false)
+  }
+  if (status < 200 || status >= 300) {
+    const error = body as ApiError
+    throw new ApiFailure(
+      status,
+      error.errors,
+      error.message || 'Сервис временно недоступен. Попробуйте ещё раз.',
+    )
+  }
+  return (body as ApiResponse<T>).data
 }
 export function errorMessage(error: unknown): string {
   return error instanceof Error

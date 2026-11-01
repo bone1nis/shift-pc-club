@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Http\Middleware\Administrator;
+use App\Http\Middleware\OwnerOnly;
 use App\Jobs\SendNotificationEmail;
 use App\Services\CatalogProjection;
 use App\Services\EventHandler;
@@ -10,6 +12,7 @@ use App\Services\SessionService;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
@@ -21,6 +24,21 @@ use Tests\TestCase;
 class DomainTest extends TestCase
 {
     use DatabaseMigrations;
+
+    public function test_owner_passes_admin_middleware_and_admin_fails_owner_middleware(): void
+    {
+        $next = fn () => response('ok');
+        foreach ([['owner', 'owner', 200], ['admin', 'owner', 403], ['player', 'owner', 403], ['owner', 'admin', 200], ['admin', 'admin', 200], ['player', 'admin', 403]] as [$role, $guard, $status]) {
+            $request = Request::create('/x');
+            $request->attributes->set('actor', ['id' => 1, 'role' => $role]);
+            $middleware = $guard === 'owner' ? new OwnerOnly : new Administrator;
+            try {
+                self::assertSame($status, $middleware->handle($request, $next)->getStatusCode());
+            } catch (HttpException $e) {
+                self::assertSame($status, $e->getStatusCode());
+            }
+        }
+    }
 
     protected function setUp(): void
     {

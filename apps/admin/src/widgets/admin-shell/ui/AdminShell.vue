@@ -1,31 +1,32 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useScrollLock } from '@vueuse/core'
 import { useRoute, useRouter } from 'vue-router'
-import { UiButton, UiEmpty, UiIcon, UiLogo, UiNotice, UiStatus } from '@shift/ui'
-import type { IconName } from '@shift/ui'
+import {
+  UiButton,
+  UiEmpty,
+  UiIcon,
+  UiLogo,
+  UiNotice,
+  UiStatus,
+  useRealtimeSession,
+} from '@shift/ui'
 import { useOperationsStore } from '@fsd/entities/operations'
 import { useUserStore } from '@fsd/entities/user'
+import { useHallSync } from '../lib/useHallSync'
+import { menuFor } from '../lib/menu'
+import ComplaintsBadge from './ComplaintsBadge.vue'
 
 const route = useRoute()
 const router = useRouter()
 const user = useUserStore()
 const ops = useOperationsStore()
-const REFRESH_MS = 30_000
+// Realtime-соединение живёт, пока администратор вошёл; сигналы подключают задачи T7.
+useRealtimeSession(computed(() => user.user?.id))
+useHallSync(ops)
 const menu = ref(false)
 
-const links: ReadonlyArray<readonly [string, IconName, string]> = [
-  ['/', 'layout-dashboard', 'Смена'],
-  ['/schedule', 'calendar-days', 'Расписание'],
-  ['/equipment', 'cpu', 'Оборудование'],
-  ['/tariffs', 'banknote', 'Тарифы'],
-  ['/club', 'house', 'Профиль клуба'],
-  ['/users', 'users', 'Посетители'],
-  ['/reports', 'trending-up', 'Отчёты'],
-  ['/notifications', 'mail', 'Уведомления'],
-  ['/processing', 'settings', 'Обработка'],
-  ['/audit', 'list', 'История действий'],
-]
+const links = computed(() => menuFor(user.user?.role))
 const title = computed(() => String(route.meta.title ?? 'Смена'))
 
 async function logout() {
@@ -33,15 +34,8 @@ async function logout() {
   await router.push('/login')
 }
 
-let timer: ReturnType<typeof setInterval> | undefined
 onMounted(() => {
   void ops.refresh()
-  timer = setInterval(() => {
-    if (!ops.pending) void ops.refresh()
-  }, REFRESH_MS)
-})
-onUnmounted(() => {
-  if (timer) clearInterval(timer)
 })
 watch(
   () => route.path,
@@ -78,7 +72,8 @@ watch(menu, (value) => {
       <span class="shell__label">Club control / Администратор</span>
       <nav class="shell__nav" aria-label="Управление клубом">
         <RouterLink v-for="[path, icon, label] in links" :key="path" :to="path" class="shell__link">
-          <UiIcon :name="icon" size="18px" :stroke="1.8" />{{ label }}
+          <UiIcon :name="icon" size="18px" :stroke="1.8" />{{ label
+          }}<ComplaintsBadge v-if="path === '/complaints'" />
         </RouterLink>
       </nav>
       <div class="shell__account">
@@ -101,7 +96,7 @@ watch(menu, (value) => {
           <div>
             <span class="shell__eyebrow shell__eyebrow--acid">SHIFT / Операционная панель</span>
             <h1>{{ title }}</h1>
-            <p class="shell__muted">Данные обновляются автоматически каждые 30 секунд.</p>
+            <p class="shell__muted">Данные обновляются автоматически.</p>
           </div>
           <UiButton variant="secondary" :loading="ops.loading" @click="ops.refresh"
             >Обновить</UiButton

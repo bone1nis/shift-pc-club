@@ -12,6 +12,7 @@
     "@date-fns/tz": "^1.5.0",
     "@formkit/auto-animate": "^0.10.0",
     "@shift/contracts": "workspace:*",
+    "@shift/e2ee": "workspace:*",
     "@shift/ui": "workspace:*",
     "@vueuse/core": "^15.0.0",
     "date-fns": "^4.4.0",

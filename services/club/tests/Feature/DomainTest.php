@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Http\Controllers\ClubController;
+use App\Http\Middleware\Administrator;
+use App\Http\Middleware\OwnerOnly;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\ConnectionException;
@@ -38,6 +40,21 @@ class DomainTest extends TestCase
     public function test_admin_rejects_unauthenticated_writes(): void
     {
         $this->patchJson('/api/club/admin/tariffs/1', ['hourly_price' => 0])->assertUnauthorized();
+    }
+
+    public function test_owner_passes_admin_middleware_and_admin_fails_owner_middleware(): void
+    {
+        $next = fn () => response('ok');
+        foreach ([['owner', 'owner', 200], ['admin', 'owner', 403], ['player', 'owner', 403], ['owner', 'admin', 200], ['admin', 'admin', 200], ['player', 'admin', 403]] as [$role, $guard, $status]) {
+            $request = Request::create('/x');
+            $request->attributes->set('actor', ['id' => 1, 'role' => $role]);
+            $middleware = $guard === 'owner' ? new OwnerOnly : new Administrator;
+            try {
+                self::assertSame($status, $middleware->handle($request, $next)->getStatusCode());
+            } catch (HttpException $e) {
+                self::assertSame($status, $e->getStatusCode());
+            }
+        }
     }
 
     public function test_internal_catalog_is_private(): void

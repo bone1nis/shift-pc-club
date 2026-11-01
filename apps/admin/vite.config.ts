@@ -1,8 +1,13 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
 import { fileURLToPath } from 'node:url'
+// Публичный ключ Reverb берётся из корневого .env (или из окружения сборки).
+const rootEnv = loadEnv('', fileURLToPath(new URL('../..', import.meta.url)), 'REVERB_')
 export default defineConfig({
+  define: {
+    __REVERB_APP_KEY__: JSON.stringify(process.env.REVERB_APP_KEY ?? rootEnv.REVERB_APP_KEY ?? ''),
+  },
   base: '/admin/',
   // Общая статика (шрифты, иконки, favicon) лежит в packages/ui/public.
   publicDir: fileURLToPath(new URL('../../packages/ui/public', import.meta.url)),
@@ -43,6 +48,11 @@ export default defineConfig({
   resolve: { alias: { '@fsd': fileURLToPath(new URL('./src', import.meta.url)) } },
   server: {
     proxy: {
+      '/app': {
+        target: process.env.API_INTERNAL_ORIGIN || 'http://localhost:8088',
+        changeOrigin: false,
+        ws: true,
+      },
       '/api': {
         target: process.env.API_INTERNAL_ORIGIN || 'http://localhost:8088',
         changeOrigin: false,
